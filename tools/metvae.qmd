@@ -1,0 +1,47 @@
+---
+title: "MetVAE"
+description: "Correlation-based molecular networks from untargeted metabolomics data, estimated with a variational autoencoder."
+area: "Metabolomics correlation"
+order: 1
+status: released
+platforms:
+  - name: Python
+    url: https://pypi.org/project/metvae/
+  - name: GNPS
+    url: https://github.com/ziluwang829/GNPS_Local/tree/metvae-integration
+    status: planned
+  - name: R
+    status: planned
+related: [secom]
+---
+
+::: {.method-meta}
+[Metabolomics correlation]{.area} [released]{.status .released} [Python]{.badge-p} [GNPS]{.badge-p .planned} [R]{.badge-p .planned}
+:::
+
+MetVAE constructs a correlation network from untargeted metabolomics data. A variational autoencoder imputes values below the detection limit, covariate effects are removed, and a sparse correlation matrix between metabolite features is estimated.
+
+## Platforms
+
+| Platform | Package | Install | Documentation |
+|---|---|---|---|
+| Python | metvae (PyPI), with the command-line tool `metvae-cli` | `pip install metvae` | [PyPI](https://pypi.org/project/metvae/) · [GitHub](https://github.com/FrederickHuangLin/MetVAE-PyPI) |
+| GNPS | GNPS_Local, an offline single-user version of GNPS molecular networking | In development | [Integration branch](https://github.com/ziluwang829/GNPS_Local/tree/metvae-integration) · [GNPS_Local](https://github.com/Some-Earth-2514/GNPS_Local) |
+| R | R package | In development | |
+
+## Quick start
+
+```bash
+pip install metvae
+metvae-cli --help
+```
+
+The Python interface and a worked example are described on the [PyPI project page](https://pypi.org/project/metvae/).
+
+## Citation
+
+Lin H, Zhang L, Lotfi A, Jarmusch A, Lee I, Kim A, Morton JT, Aksenov A. Protocol for constructing correlation-based molecular networks from large-scale untargeted metabolomics data. *bioRxiv* (2026). [doi:10.1101/2025.04.26.649581](https://doi.org/10.1101/2025.04.26.649581)
+
+## Related methods
+
+- [SECOM](secom.qmd): correlation between taxa in microbiome data.

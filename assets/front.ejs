@@ -1,0 +1,113 @@
+```{=html}
+<%
+// Front page template: a river between two ink-wash banks.
+// Categories are stones in the river, listed here in display order with their pigment.
+// Methods are fish; they come from the front matter of tools/*.qmd
+// (fields: area, order, status, platforms, related, tutorial).
+const areas = [
+  { name: "Microbiome differential abundance", color: "#a63d2f" },
+  { name: "Microbiome correlation", color: "#476e61" },
+  { name: "Microbiome mediation", color: "#a47b36" },
+  { name: "Metabolomics correlation", color: "#625d78" },
+  { name: "Multi-omics integration", color: "#466675" }
+];
+const idOf = item => item.path.split("/").pop().replace(/\.(qmd|html)$/, "");
+const known = new Set(areas.map(a => a.name));
+for (const item of items) {
+  if (item.area && !known.has(item.area)) { areas.push({ name: item.area, color: "#665f55" }); known.add(item.area); }
+}
+const groups = areas
+  .map(a => ({ ...a, methods: items.filter(i => i.area === a.name).sort((x, y) => (x.order || 0) - (y.order || 0)) }))
+  .filter(g => g.methods.length > 0);
+const platformNames = [];
+for (const item of items) for (const p of (item.platforms || [])) if (!platformNames.includes(p.name)) platformNames.push(p.name);
+%>
+<svg class="ink-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="ink-edge" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ink-wash" x="-40%" y="-40%" width="180%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="3" seed="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="2.2"/>
+    </filter>
+    <!-- Ink spreading into wet paper, used when a fish is selected. -->
+    <filter id="ink-bleed" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.016" numOctaves="4" seed="11" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="60" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="5"/>
+    </filter>
+    <filter id="ink-wobble">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+<div class="front">
+  <!-- The landscape is drawn into this element by assets/front.js. -->
+  <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"></svg>
+  <div class="front-in">
+    <header class="front-head">
+      <div class="eyebrow">MATRIX RESEARCH LAB · SOFTWARE</div>
+      <h1>Open-Source <em>Software</em> <span class="seal" lang="zh-Hant" aria-hidden="true">開源</span></h1>
+      <p>Statistical methods for microbiome, metabolomics, and multi-omics data.</p>
+      <p class="howto">Each stone is a type of analysis. Hover over a stone to call its methods, then select a fish to open its tutorial.</p>
+    </header>
+
+    <ul class="stage" aria-label="Software methods by type of analysis">
+      <% for (const g of groups) { %>
+      <li class="cat" data-area="<%- g.name %>" style="--c:<%= g.color %>">
+        <button class="stone" type="button" aria-expanded="false">
+          <span class="stone-art" aria-hidden="true">
+            <svg viewBox="0 0 240 130" focusable="false">
+              <path class="stone-shadow" d="M14 86Q28 38 88 28Q152 8 210 48Q244 84 196 106Q96 134 14 86Z"/>
+              <path class="stone-body" d="M22 76Q30 32 88 22Q150 6 204 42Q232 74 194 96Q104 122 22 76Z"/>
+              <path class="stone-light" d="M48 62Q66 30 112 28Q152 20 180 40Q128 36 86 62Q64 76 48 62Z"/>
+              <path class="stone-vein" d="M58 88q34-24 66-16t48-10M92 38q22 6 38-2M170 58q14 12 10 26"/>
+              <path class="stone-water" d="M4 96q22 12 50 9M184 116q30-2 50-14M70 124h54"/>
+            </svg>
+          </span>
+          <span class="stone-name"><%- g.name %></span>
+        </button>
+        <ul class="school">
+          <% for (const m of g.methods) { const dev = m.status !== "released"; %>
+          <li class="sat<%= dev ? " dev" : "" %>"
+              data-id="<%- idOf(m) %>"
+              data-platforms="<%- (m.platforms || []).map(p => p.name).join("|") %>"
+              data-planned="<%- (m.platforms || []).filter(p => p.status === "planned").map(p => p.name).join("|") %>"
+              data-desc="<%- m.description || "" %>"
+              data-status="<%- m.status || "" %>">
+            <a class="fish" href="<%- m.path %><%= m.tutorial ? "#extended-tutorial" : "" %>">
+              <svg class="koi" viewBox="-50 -24 100 48" aria-hidden="true" focusable="false">
+                <g class="koi-turn">
+                  <path class="koi-tail" d="M-25 0C-33-4-40-13-46-15C-42-6-42 6-46 15C-40 13-33 4-25 0Z"/>
+                  <path class="koi-fin" d="M12-8C8-17-1-19-6-16C1-14 6-11 9-8ZM12 8C8 17-1 19-6 16C1 14 6 11 9 8Z"/>
+                  <path class="koi-body" d="M31 0C25-10 6-12-10-8C-18-6-24-3-28 0C-24 3-18 6-10 8C6 12 25 10 31 0Z"/>
+                  <path class="koi-patch" d="M24-5C18-9 8-9 5-4C7 3 16 7 24 5C27 2 27-2 24-5ZM-6-6C-12-7-17-4-17 0C-14 4-8 5-4 2C-3-1-4-4-6-6Z"/>
+                  <circle class="koi-eye" cx="25" cy="-4.300" r="1.300"/><circle class="koi-eye" cx="25" cy="4.300" r="1.300"/>
+                </g>
+              </svg>
+              <span class="sat-name"><%- m.title %></span>
+              <% if (dev) { %><span class="dev-label">in development</span><% } %>
+            </a>
+          </li>
+          <% } %>
+        </ul>
+      </li>
+      <% } %>
+    </ul>
+
+    <p class="caption" aria-live="polite" data-default=""></p>
+
+    <div class="filter" role="group" aria-label="Find by platform">
+      <span class="filter-label">Find by platform</span>
+      <% for (const p of platformNames) { %>
+      <button type="button" aria-pressed="false" data-platform="<%- p %>"><%- p %></button>
+      <% } %>
+      <a class="all-methods" href="tools/index.html">All methods as a list <span>→</span></a>
+    </div>
+  </div>
+</div>
+```

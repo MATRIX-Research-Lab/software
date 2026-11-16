@@ -1,0 +1,19 @@
+---
+pagetitle: "Open-Source Software"
+page-layout: custom
+listing:
+  id: front
+  contents:
+    - "tools/*.qmd"
+    - "!tools/index.qmd"
+  template: assets/front.ejs
+  sort: "order"
+  page-size: 200
+---
+
+::: {#front}
+:::
+
+```{=html}
+<script src="assets/front.js"></script>
+```

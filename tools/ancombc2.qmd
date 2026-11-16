@@ -1,0 +1,330 @@
+---
+title: "ANCOM-BC2"
+description: "Differential abundance analysis for multiple groups, with covariate adjustment and repeated measures."
+area: "Microbiome differential abundance"
+order: 2
+status: released
+platforms:
+  - name: R
+    url: https://bioconductor.org/packages/ANCOMBC/
+  - name: Python
+    url: https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc2.html
+  - name: QIIME 2
+    url: https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc2
+related: [ancombc, ancombc3, secom]
+tutorial: true
+toc: true
+toc-depth: 2
+toc-title: "On this page"
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    comment: "#>"
+---
+
+::: {.method-meta}
+[Microbiome differential abundance]{.area} [released]{.status .released} [R]{.badge-p} [Python]{.badge-p} [QIIME 2]{.badge-p}
+:::
+
+ANCOM-BC2 extends ANCOM-BC to multigroup comparisons. It supports fixed and random effects, and therefore covariate adjustment and repeated measures. It provides a global test, pairwise comparisons, comparisons against a reference group (Dunnett-type), and trend tests across ordered groups, with control of the mixed directional false discovery rate.
+
+## Platforms
+
+| Platform | Package | Install | Documentation |
+|---|---|---|---|
+| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html) · [GitHub](https://github.com/FrederickHuangLin/ANCOMBC) |
+| Python | scikit-bio (version 0.7.4 or later) | `pip install scikit-bio` | [`skbio.stats.composition.ancombc2`](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc2.html) |
+| QIIME 2 | q2-composition | Included in the QIIME 2 amplicon distribution | [`qiime composition ancombc2`](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc2) · [GitHub](https://github.com/qiime2/q2-composition) |
+
+## Extended tutorial
+
+The R tutorial applies ANCOM-BC2 to the HITChip Atlas data set of intestinal microbiota profiles from Western adults, distributed with the `microbiome` package as `atlas1006`. The analysis compares the abundance of each taxon, aggregated at the `Family` rank of the data set, across three body mass index (BMI) groups (lean, overweight, obese), adjusted for age and geographic region.
+
+Select a platform.
+
+::: {.panel-tabset group="platform"}
+
+### R
+
+#### Model and hypotheses
+
+Let $o_{ij}$ denote the observed abundance of taxon $i$ in sample $j$, and let $\mathbf{x}_j$ denote the covariate vector of sample $j$, including an intercept. ANCOM-BC2 assumes
+
+$$
+\log o_{ij} = d_j + \mathbf{x}_j^\top \boldsymbol{\beta}_i + \varepsilon_{ij},
+$$
+
+where $d_j$ is the log sampling fraction of sample $j$ and $\varepsilon_{ij}$ is a mean-zero error. For repeated measures, random effects are added to the linear predictor through `rand_formula`.
+
+Let $\beta_{i,\mathrm{ow}}$ and $\beta_{i,\mathrm{ob}}$ denote the coefficients of taxon $i$ for the overweight and obese groups, with lean as the reference. The analysis tests four families of hypotheses.
+
+| Test | Null hypothesis | Alternative |
+|---|---|---|
+| Primary | $\beta_{ik} = 0$ for one coefficient $k$ | $\beta_{ik} \neq 0$ |
+| Global | $\beta_{i,\mathrm{ow}} = \beta_{i,\mathrm{ob}} = 0$ | at least one is nonzero |
+| Pairwise directional | equal abundance in a pair of groups, for every pair | a difference with its direction |
+| Dunnett type | equal abundance in a group and the reference, for every non-reference group | a difference with its direction |
+| Trend | $\beta_{i,\mathrm{ow}} = \beta_{i,\mathrm{ob}} = 0$ | a monotone pattern across the ordered groups |
+
+The pairwise and Dunnett-type tests control the mixed directional false discovery rate, which accounts for both the multiple comparisons within a taxon and the multiplicity across taxa.
+
+#### Data
+
+```{r}
+#| label: setup
+library(ANCOMBC)
+library(tidyverse)
+
+data(atlas1006, package = "microbiome")
+
+# Baseline samples only, so that each subject contributes one sample.
+pseq <- phyloseq::subset_samples(atlas1006, time == 0)
+meta <- data.frame(phyloseq::sample_data(pseq))
+
+# BMI in three ordered groups, with lean as the reference level.
+meta$bmi <- fct_collapse(meta$bmi_group,
+                         obese = c("obese", "severeobese", "morbidobese"))
+meta$bmi <- factor(meta$bmi, levels = c("lean", "overweight", "obese"))
+
+# Geographic region, with Central Europe as the reference level.
+meta$region <- fct_collapse(meta$nationality,
+                            CE = "CentralEurope", NE = c("Scandinavia", "UKIE"),
+                            SE = "SouthEurope", EE = "EasternEurope", US = "US")
+
+phyloseq::sample_data(pseq) <- meta
+tse <- mia::convertFromPhyloseq(pseq)
+tse
+```
+
+#### Analysis
+
+The trend test requires the monotone patterns as inequality constraints $A\boldsymbol{\theta} \ge 0$ on $\boldsymbol{\theta} = (\beta_{i,\mathrm{ow}}, \beta_{i,\mathrm{ob}})^\top$. The pattern $0 \le \beta_{i,\mathrm{ow}} \le \beta_{i,\mathrm{ob}}$ (increasing) and the pattern $0 \ge \beta_{i,\mathrm{ow}} \ge \beta_{i,\mathrm{ob}}$ (decreasing) are specified as two contrast matrices.
+
+```{r}
+#| label: contrasts
+increasing <- matrix(c( 1, 0,
+                       -1, 1), nrow = 2, byrow = TRUE)
+decreasing <- matrix(c(-1,  0,
+                        1, -1), nrow = 2, byrow = TRUE)
+```
+
+```{r}
+#| label: fit
+set.seed(123)
+out <- ancombc2(data = tse, assay_name = "counts", tax_level = "Family",
+                fix_formula = "age + region + bmi", rand_formula = NULL,
+                p_adj_method = "holm", pseudo_sens = TRUE,
+                prv_cut = 0.10, lib_cut = 1000, s0_perc = 0.05,
+                group = "bmi", struc_zero = TRUE, neg_lb = TRUE,
+                alpha = 0.05, n_cl = 2, verbose = FALSE,
+                global = TRUE, pairwise = TRUE, dunnet = TRUE, trend = TRUE,
+                iter_control = list(tol = 1e-2, max_iter = 20, verbose = FALSE),
+                em_control = list(tol = 1e-5, max_iter = 100),
+                lme_control = lme4::lmerControl(),
+                mdfdr_control = list(fwer_ctrl_method = "holm", B = 100),
+                trend_control = list(contrast = list(increasing, decreasing),
+                                     node = list(2, 2),
+                                     solver = "ECOS", B = 100))
+```
+
+| Argument | Role |
+|---|---|
+| `fix_formula`, `rand_formula` | Fixed and random effects of the log-linear model. |
+| `group` | Grouping variable for structural zero detection and for the global, pairwise, Dunnett-type, and trend tests. |
+| `pseudo_sens` | Sensitivity analysis of each result to the addition of pseudo-counts to zeros. |
+| `s0_perc` | Percentile of the standard errors added to the denominator of the test statistic, which limits significance caused by very small standard errors. |
+| `global`, `pairwise`, `dunnet`, `trend` | Multigroup tests to perform. |
+| `mdfdr_control` | Procedure and number of bootstrap samples `B` for the mixed directional false discovery rate. |
+| `trend_control` | Contrast matrices, position of the nodal parameter, and number of bootstrap samples `B` for the trend test. |
+
+#### Primary results
+
+The element `res` is a data frame with one row per taxon. For each model coefficient it contains the following columns.
+
+| Column prefix | Content |
+|---|---|
+| `lfc_` | Log fold change (natural log) |
+| `se_` | Standard error |
+| `W_` | Test statistic, `lfc / se` |
+| `p_`, `q_` | *p*-value and adjusted *p*-value |
+| `diff_` | `TRUE` if the adjusted *p*-value is below `alpha` |
+| `passed_ss_` | `TRUE` if the result does not change with the pseudo-count added to zeros |
+| `diff_robust_` | `TRUE` if both `diff_` and `passed_ss_` are `TRUE` |
+
+```{r}
+#| label: primary
+res <- out$res
+
+tab_obese <- res |>
+  transmute(taxon,
+            lfc = lfc_bmiobese, se = se_bmiobese, W = W_bmiobese,
+            p = p_bmiobese, q = q_bmiobese,
+            diff = diff_bmiobese, passed_ss = passed_ss_bmiobese,
+            diff_robust = diff_robust_bmiobese) |>
+  arrange(q)
+
+knitr::kable(tab_obese, digits = 3,
+             caption = "Obese versus lean, adjusted for age and region.")
+```
+
+```{r}
+#| label: fig-primary
+#| fig-cap: "Log fold change (natural log) in absolute abundance, obese versus lean, with 95% confidence intervals. Filled points have an adjusted p-value below 0.05 and passed the sensitivity analysis."
+#| fig-width: 7
+#| fig-height: 5.2
+tab_obese |>
+  mutate(taxon = fct_reorder(taxon, lfc)) |>
+  ggplot(aes(x = lfc, y = taxon)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_errorbarh(aes(xmin = lfc - 1.96 * se, xmax = lfc + 1.96 * se),
+                 height = 0, color = "grey40") +
+  geom_point(aes(fill = diff_robust), shape = 21, size = 3, color = "grey20") +
+  scale_fill_manual(values = c(`TRUE` = "#f2775f", `FALSE` = "white"),
+                    guide = "none") +
+  labs(x = "Log fold change (obese versus lean)", y = NULL) +
+  theme_minimal(base_size = 12)
+```
+
+#### Global test
+
+```{r}
+#| label: global
+out$res_global |>
+  arrange(q_val) |>
+  knitr::kable(digits = 3, caption = "Global test across the three BMI groups.")
+```
+
+#### Pairwise directional test
+
+The element `res_pair` contains the three pairwise comparisons. Columns with the suffix `bmioverweight` and `bmiobese` compare each group with lean. Columns with the suffix `bmiobese_bmioverweight` compare obese with overweight.
+
+```{r}
+#| label: pairwise
+pair_long <- out$res_pair |>
+  pivot_longer(-taxon,
+               names_to = c(".value", "comparison"),
+               names_pattern = "^(lfc|se|W|p|q|diff_robust|diff|passed_ss)_(.*)$") |>
+  mutate(comparison = recode(comparison,
+                             bmioverweight = "overweight vs lean",
+                             bmiobese = "obese vs lean",
+                             bmiobese_bmioverweight = "obese vs overweight"))
+
+pair_long |>
+  filter(diff) |>
+  select(taxon, comparison, lfc, se, q, passed_ss) |>
+  arrange(q) |>
+  knitr::kable(digits = 3,
+               caption = "Pairwise comparisons with an adjusted p-value below 0.05.")
+```
+
+```{r}
+#| label: fig-pairwise
+#| fig-cap: "Log fold changes (natural log) for the three pairwise comparisons, with 95% confidence intervals. Filled points have an adjusted p-value below 0.05 and passed the sensitivity analysis."
+#| fig-width: 9
+#| fig-height: 5.2
+pair_long |>
+  mutate(taxon = fct_rev(factor(taxon))) |>
+  ggplot(aes(x = lfc, y = taxon)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_errorbarh(aes(xmin = lfc - 1.96 * se, xmax = lfc + 1.96 * se),
+                 height = 0, color = "grey40") +
+  geom_point(aes(fill = diff_robust), shape = 21, size = 2.6, color = "grey20") +
+  scale_fill_manual(values = c(`TRUE` = "#f2775f", `FALSE` = "white"),
+                    guide = "none") +
+  facet_wrap(~ comparison) +
+  labs(x = "Log fold change", y = NULL) +
+  theme_minimal(base_size = 12)
+```
+
+#### Dunnett-type test
+
+The element `res_dunn` compares each non-reference group with the reference group (lean). It tests fewer comparisons than the pairwise test.
+
+```{r}
+#| label: dunnett
+out$res_dunn |>
+  select(taxon, lfc_bmioverweight, q_bmioverweight, diff_bmioverweight,
+         lfc_bmiobese, q_bmiobese, diff_bmiobese) |>
+  arrange(q_bmiobese) |>
+  knitr::kable(digits = 3, caption = "Dunnett-type test against the lean group.")
+```
+
+#### Trend test
+
+The log fold changes in `res_trend` are the estimates under the monotone constraint, so they differ from the unconstrained estimates in `res`.
+
+```{r}
+#| label: trend
+out$res_trend |>
+  select(taxon, lfc_bmioverweight, lfc_bmiobese, W, p_val, q_val,
+         diff_abn, passed_ss) |>
+  arrange(q_val) |>
+  knitr::kable(digits = 3,
+               caption = "Test of a monotone pattern across lean, overweight, and obese.")
+```
+
+In this analysis, `r sum(out$res_trend$diff_abn)` of the `r nrow(out$res_trend)` taxa have an adjusted *p*-value below 0.05 in the trend test.
+
+#### Bias-corrected abundances
+
+The element `bias_correct_log_table` contains the log abundances after subtraction of the estimated sample-specific bias. These values are comparable between samples.
+
+```{r}
+#| label: corrected
+round(out$bias_correct_log_table[1:5, 1:4], 2)
+```
+
+#### Session information
+
+```{r}
+#| label: session
+#| code-fold: true
+sessionInfo()
+```
+
+### Python
+
+The code in this tab is shown for reference and is not executed on this page.
+
+ANCOM-BC2 is available in [scikit-bio](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc2.html) from version 0.7.4.
+
+```bash
+pip install scikit-bio
+```
+
+```python
+from skbio.stats.composition import ancombc2
+```
+
+The arguments and the structure of the result are listed in the [function reference](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc2.html).
+
+### QIIME 2
+
+The command in this tab is shown for reference and is not executed on this page.
+
+ANCOM-BC2 is an action of the [q2-composition](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc2) plugin, which is included in the QIIME 2 amplicon distribution.
+
+```bash
+qiime composition ancombc2 --help
+```
+
+The inputs, parameters, and outputs are listed in the [plugin reference](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc2).
+
+### Web tool
+
+A web tool for this method is in development. This tab will hold its link and a walk-through at release.
+
+:::
+
+## Citation
+
+Lin H, Peddada SD. Multigroup analysis of compositions of microbiomes with covariate adjustments and repeated measures. *Nature Methods* 21:83–91 (2024). [doi:10.1038/s41592-023-02092-7](https://doi.org/10.1038/s41592-023-02092-7)
+
+For the Python implementation, also cite: Wu Z, Lin H, Morton JT, Zhu Q. Efficient and scalable Python implementation of ANCOM-BC and ANCOM-BC2 for omics differential abundance testing. *Bioinformatics* 42(10):btag767 (2026). [doi:10.1093/bioinformatics/btag767](https://doi.org/10.1093/bioinformatics/btag767)
+
+## Related methods
+
+- [ANCOM-BC](ancombc.qmd): the two-group method that ANCOM-BC2 extends.
+- [ANCOM-BC3](ancombc3.qmd): in development.
+- [SECOM](secom.qmd): correlation between taxa, distributed in the same R package.

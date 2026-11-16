@@ -1,0 +1,20 @@
+---
+title: "Tools"
+listing:
+  contents:
+    - "*.qmd"
+    - "!index.qmd"
+  type: table
+  sort: ["area", "order"]
+  fields: [title, area, status, description]
+  field-display-names:
+    title: "Method"
+    area: "Analysis"
+    status: "Status"
+    description: "Purpose"
+  sort-ui: false
+  filter-ui: true
+  page-size: 100
+---
+
+[All methods, by type of analysis. Each method page lists the platforms on which the method is available, with installation commands, documentation, and citation.]{.lead-line}

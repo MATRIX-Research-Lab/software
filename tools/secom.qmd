@@ -1,0 +1,237 @@
+---
+title: "SECOM"
+description: "Sparse estimation of linear and nonlinear correlations between taxa in microbiome data."
+area: "Microbiome correlation"
+order: 1
+status: released
+platforms:
+  - name: R
+    url: https://bioconductor.org/packages/ANCOMBC/
+related: [metvae, ancombc2]
+tutorial: true
+toc: true
+toc-depth: 2
+toc-title: "On this page"
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    comment: "#>"
+---
+
+::: {.method-meta}
+[Microbiome correlation]{.area} [released]{.status .released} [R]{.badge-p}
+:::
+
+SECOM (sparse estimation of correlations among microbiomes) estimates correlations between pairs of taxa, within one ecosystem or across ecosystems. `secom_linear` estimates sparse Pearson or Spearman correlations after bias correction. `secom_dist` estimates distance correlation, which also detects nonlinear relationships.
+
+## Platforms
+
+| Platform | Package | Install | Documentation |
+|---|---|---|---|
+| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/SECOM.html) · [GitHub](https://github.com/FrederickHuangLin/ANCOMBC) |
+
+## Extended tutorial
+
+The R tutorial applies SECOM to the HITChip Atlas data set of intestinal microbiota profiles from Western adults, distributed with the `microbiome` package as `atlas1006`. The analysis estimates the correlation between each pair of taxa, aggregated at the `Family` rank of the data set.
+
+Select a platform.
+
+::: {.panel-tabset group="platform"}
+
+### R
+
+#### Model
+
+Let $o_{ij}$ denote the observed abundance and $a_{ij}$ the unobserved absolute abundance of taxon $i$ in sample $j$. SECOM assumes
+
+$$
+\log o_{ij} = \log c_i + \log s_j + \log a_{ij},
+$$
+
+where $c_i$ is the taxon-specific sequencing efficiency and $s_j$ is the sample-specific sampling fraction. The term $\log s_j$ is shared by all taxa in sample $j$ and therefore induces correlation between observed abundances that is absent from the absolute abundances. SECOM estimates this sample-specific bias, subtracts it, and computes correlations from the bias-corrected log abundances.
+
+Two estimators are available.
+
+| Function | Measure | Detects |
+|---|---|---|
+| `secom_linear` | Pearson or Spearman correlation | Linear or monotone relationships |
+| `secom_dist` | Distance correlation | Linear and nonlinear relationships |
+
+#### Data
+
+```{r}
+#| label: setup
+library(ANCOMBC)
+library(tidyverse)
+
+data(atlas1006, package = "microbiome")
+
+# Baseline samples only, so that each subject contributes one sample.
+pseq <- phyloseq::subset_samples(atlas1006, time == 0)
+meta <- data.frame(phyloseq::sample_data(pseq))
+
+# BMI in three ordered groups, with lean as the reference level.
+meta$bmi <- fct_collapse(meta$bmi_group,
+                         obese = c("obese", "severeobese", "morbidobese"))
+meta$bmi <- factor(meta$bmi, levels = c("lean", "overweight", "obese"))
+
+# Geographic region, with Central Europe as the reference level.
+meta$region <- fct_collapse(meta$nationality,
+                            CE = "CentralEurope", NE = c("Scandinavia", "UKIE"),
+                            SE = "SouthEurope", EE = "EasternEurope", US = "US")
+
+phyloseq::sample_data(pseq) <- meta
+tse <- mia::convertFromPhyloseq(pseq)
+tse
+```
+
+#### Linear correlation
+
+```{r}
+#| label: linear
+set.seed(123)
+res_linear <- secom_linear(data = list(tse), assay_name = "counts",
+                           tax_level = "Family", pseudo = 0,
+                           prv_cut = 0.5, lib_cut = 1000, corr_cut = 0.5,
+                           wins_quant = c(0.05, 0.95), method = "pearson",
+                           soft = FALSE, thresh_len = 20, n_cv = 10,
+                           thresh_hard = 0.3, max_p = 0.005, n_cl = 2)
+```
+
+| Argument | Role |
+|---|---|
+| `data` | A list of data objects, one per ecosystem. One element gives correlations within one ecosystem. |
+| `prv_cut` | Taxa present in a smaller proportion of samples are excluded. |
+| `corr_cut` | A taxon whose correlation with the estimated sample-specific bias exceeds this value is flagged, and its pairwise correlations are set to 0. |
+| `wins_quant` | Quantiles at which extreme abundances are winsorized. |
+| `soft`, `thresh_len`, `n_cv` | Thresholding operator, number of candidate thresholds, and number of cross-validation folds for the thresholded estimate. |
+| `thresh_hard` | Correlations with absolute value at or below this value are set to 0. |
+| `max_p` | Correlations with a *p*-value above this value are set to 0 in the filtered estimate. |
+
+The result contains three estimates of the correlation matrix.
+
+| Element | Content |
+|---|---|
+| `corr` | Sample correlation matrix of the bias-corrected abundances |
+| `corr_th` | Sparse matrix obtained by thresholding, with the threshold chosen by cross-validation |
+| `corr_fl` | Sparse matrix obtained by *p*-value filtering at `max_p` |
+
+A function for drawing a correlation matrix is defined once and used for each estimate.
+
+```{r}
+#| label: heatmap-function
+plot_corr <- function(mat, limits = c(-1, 1), label = "Correlation") {
+  as.data.frame(as.table(mat)) |>
+    setNames(c("taxon1", "taxon2", "value")) |>
+    mutate(taxon2 = fct_rev(taxon2)) |>
+    ggplot(aes(x = taxon1, y = taxon2, fill = value)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(value == 0, "", sprintf("%.2f", value))),
+              size = 2.6) +
+    scale_fill_gradient2(low = "#3f9ae0", mid = "white", high = "#f2775f",
+                         midpoint = 0, limits = limits, name = label) +
+    labs(x = NULL, y = NULL) +
+    coord_fixed() +
+    theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.grid = element_blank())
+}
+```
+
+```{r}
+#| label: fig-linear-fl
+#| fig-cap: "Pearson correlation after p-value filtering (corr_fl). Empty cells are correlations set to 0."
+#| fig-width: 8
+#| fig-height: 7
+plot_corr(res_linear$corr_fl)
+```
+
+```{r}
+#| label: fig-linear-th
+#| fig-cap: "Pearson correlation after thresholding (corr_th). Empty cells are correlations set to 0."
+#| fig-width: 8
+#| fig-height: 7
+plot_corr(res_linear$corr_th)
+```
+
+#### Distance correlation
+
+Distance correlation takes values in $[0, 1]$ and equals 0 only under independence. The *p*-values are obtained from `R` permutation replicates.
+
+```{r}
+#| label: dist
+set.seed(123)
+res_dist <- secom_dist(data = list(tse), assay_name = "counts",
+                       tax_level = "Family", pseudo = 0,
+                       prv_cut = 0.5, lib_cut = 1000, corr_cut = 0.5,
+                       wins_quant = c(0.05, 0.95), R = 1000,
+                       thresh_hard = 0.3, max_p = 0.005, n_cl = 2)
+```
+
+```{r}
+#| label: fig-dist
+#| fig-cap: "Distance correlation after p-value filtering (dcorr_fl). Empty cells are correlations set to 0."
+#| fig-width: 8
+#| fig-height: 7
+plot_corr(res_dist$dcorr_fl, limits = c(0, 1), label = "Distance\ncorrelation")
+```
+
+#### Comparison of the two estimators
+
+A pair of taxa with a nonzero filtered distance correlation and a zero filtered Pearson correlation is a candidate for a nonlinear relationship.
+
+```{r}
+#| label: compare
+upper <- upper.tri(res_linear$corr_fl)
+taxa  <- rownames(res_linear$corr_fl)
+
+pairs <- tibble(
+  taxon1   = taxa[row(res_linear$corr_fl)[upper]],
+  taxon2   = taxa[col(res_linear$corr_fl)[upper]],
+  pearson  = res_linear$corr_fl[upper],
+  distance = res_dist$dcorr_fl[upper]
+)
+
+c(pairs               = nrow(pairs),
+  pearson_nonzero     = sum(pairs$pearson != 0),
+  distance_nonzero    = sum(pairs$distance != 0),
+  distance_only       = sum(pairs$distance != 0 & pairs$pearson == 0))
+
+pairs |>
+  filter(distance != 0, pearson == 0) |>
+  arrange(desc(distance)) |>
+  knitr::kable(digits = 3,
+               caption = "Pairs with a nonzero distance correlation and a zero Pearson correlation after filtering.")
+```
+
+#### Correlation between two ecosystems
+
+To estimate correlations between taxa from two ecosystems measured on the same subjects, pass both data objects in `data`, for example `data = list(gut = tse_gut, oral = tse_oral)`, with matching sample names. The result is one correlation matrix over the taxa of both ecosystems.
+
+#### Session information
+
+```{r}
+#| label: session
+#| code-fold: true
+sessionInfo()
+```
+
+### Python
+
+SECOM is not yet available in Python.
+
+### Web tool
+
+SECOM is not yet available as a web tool.
+
+:::
+
+## Citation
+
+Lin H, Eggesbø M, Peddada SD. Linear and nonlinear correlation estimators unveil undescribed taxa interactions in microbiome data. *Nature Communications* 13:4946 (2022). [doi:10.1038/s41467-022-32243-x](https://doi.org/10.1038/s41467-022-32243-x)
+
+## Related methods
+
+- [MetVAE](metvae.qmd): correlation analysis for untargeted metabolomics data.
+- [ANCOM-BC2](ancombc2.qmd): differential abundance analysis, distributed in the same R package.

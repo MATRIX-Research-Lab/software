@@ -1,0 +1,38 @@
+project:
+  type: website
+  output-dir: docs
+  resources:
+    - assets/front.js
+  post-render:
+    - touch docs/.nojekyll
+
+website:
+  title: "Open-Source Software"
+  description: "Open-source statistical software for microbiome, metabolomics, and multi-omics data from the MATRIX Research Lab."
+  site-url: https://matrix-research-lab.github.io/software/
+  navbar:
+    left:
+      - href: tools/index.qmd
+        text: Tools
+      - href: tutorials/index.qmd
+        text: Tutorials
+      - href: community.qmd
+        text: Community
+    right:
+      - href: https://matrix-research-lab.github.io/
+        text: MATRIX Lab
+  page-footer:
+    left: "MATRIX Research Lab, University of Maryland School of Public Health"
+    right:
+      - href: https://matrix-research-lab.github.io/
+        text: Lab website
+
+format:
+  html:
+    theme: [cosmo, assets/theme.scss]
+    css: assets/site.css
+    toc: false
+    code-copy: true
+
+execute:
+  freeze: auto

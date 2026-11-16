@@ -1,0 +1,280 @@
+---
+title: "ANCOM-BC"
+description: "Differential abundance analysis of microbiome count data with correction for sample-specific sampling fraction bias."
+area: "Microbiome differential abundance"
+order: 1
+status: released
+platforms:
+  - name: R
+    url: https://bioconductor.org/packages/ANCOMBC/
+  - name: Python
+    url: https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html
+  - name: QIIME 2
+    url: https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc
+related: [ancombc2, ancombc3, secom]
+tutorial: true
+toc: true
+toc-depth: 2
+toc-title: "On this page"
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    comment: "#>"
+---
+
+::: {.method-meta}
+[Microbiome differential abundance]{.area} [released]{.status .released} [R]{.badge-p} [Python]{.badge-p} [QIIME 2]{.badge-p}
+:::
+
+ANCOM-BC (analysis of compositions of microbiomes with bias correction) tests for differential abundance of taxa between groups. It estimates the sample-specific sampling fraction, corrects the resulting bias in a log-linear model, and reports effect estimates, standard errors, and adjusted *p*-values for each taxon.
+
+## Platforms
+
+| Platform | Package | Install | Documentation |
+|---|---|---|---|
+| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC.html) · [GitHub](https://github.com/FrederickHuangLin/ANCOMBC) |
+| Python | scikit-bio (version 0.7.1 or later) | `pip install scikit-bio` | [`skbio.stats.composition.ancombc`](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html) |
+| QIIME 2 | q2-composition | Included in the QIIME 2 amplicon distribution | [`qiime composition ancombc`](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc) · [GitHub](https://github.com/qiime2/q2-composition) |
+
+## Extended tutorial
+
+The R tutorial applies ANCOM-BC to the HITChip Atlas data set of intestinal microbiota profiles from Western adults, distributed with the `microbiome` package as `atlas1006`. The analysis tests whether the abundance of each taxon, aggregated at the `Family` rank of the data set, differs between body mass index (BMI) groups, adjusted for age and geographic region.
+
+Select a platform.
+
+::: {.panel-tabset group="platform"}
+
+### R
+
+#### Model
+
+Let $o_{ij}$ denote the observed abundance of taxon $i$ in sample $j$, and let $\mathbf{x}_j$ denote the covariate vector of sample $j$, including an intercept. ANCOM-BC assumes
+
+$$
+\log o_{ij} = d_j + \mathbf{x}_j^\top \boldsymbol{\beta}_i + \varepsilon_{ij},
+$$
+
+where $d_j$ is the log sampling fraction of sample $j$ and $\varepsilon_{ij}$ is a mean-zero error. The sampling fraction is not observed and differs between samples, which biases an unadjusted comparison of observed abundances. ANCOM-BC estimates $d_j$, and for coefficient $k$ of taxon $i$ tests
+
+$$
+H_0: \beta_{ik} = 0 \quad \text{with} \quad W_{ik} = \hat{\beta}_{ik} / \widehat{\mathrm{se}}(\hat{\beta}_{ik}).
+$$
+
+The coefficient $\beta_{ik}$ is a log fold change in absolute abundance on the natural-log scale.
+
+#### Data
+
+```{r}
+#| label: setup
+library(ANCOMBC)
+library(tidyverse)
+
+data(atlas1006, package = "microbiome")
+
+# Baseline samples only, so that each subject contributes one sample.
+pseq <- phyloseq::subset_samples(atlas1006, time == 0)
+meta <- data.frame(phyloseq::sample_data(pseq))
+
+# BMI in three groups, with lean as the reference level.
+meta$bmi <- fct_collapse(meta$bmi_group,
+                         obese = c("obese", "severeobese", "morbidobese"))
+meta$bmi <- factor(meta$bmi, levels = c("lean", "overweight", "obese"))
+
+# Geographic region, with Central Europe as the reference level.
+meta$region <- fct_collapse(meta$nationality,
+                            CE = "CentralEurope", NE = c("Scandinavia", "UKIE"),
+                            SE = "SouthEurope", EE = "EasternEurope", US = "US")
+
+phyloseq::sample_data(pseq) <- meta
+tse <- mia::convertFromPhyloseq(pseq)
+tse
+```
+
+The number of samples in each BMI group and region:
+
+```{r}
+#| label: groups
+table(BMI = meta$bmi, Region = meta$region, useNA = "ifany")
+```
+
+Samples with a missing value in any covariate of the model are excluded from the analysis.
+
+#### Analysis
+
+```{r}
+#| label: fit
+set.seed(123)
+out <- ancombc(data = tse, assay_name = "counts", tax_level = "Family",
+               formula = "age + region + bmi",
+               p_adj_method = "holm", prv_cut = 0.10, lib_cut = 1000,
+               group = "bmi", struc_zero = TRUE, neg_lb = TRUE,
+               conserve = TRUE, alpha = 0.05, global = TRUE,
+               n_cl = 1, verbose = FALSE)
+```
+
+| Argument | Role |
+|---|---|
+| `tax_level` | Taxonomic rank at which counts are aggregated before testing. |
+| `formula` | Covariates of the log-linear model. |
+| `p_adj_method` | Multiplicity adjustment of the *p*-values across taxa. |
+| `prv_cut` | Taxa present in a smaller proportion of samples are excluded. |
+| `lib_cut` | Samples with a smaller library size are excluded. |
+| `group` | Grouping variable for the structural zero detection and the global test. |
+| `struc_zero`, `neg_lb` | Detection of taxa that are absent from a group. |
+| `conserve` | Variance estimator recommended for small samples or many differentially abundant taxa. |
+| `global` | Test of any difference among the levels of `group`. |
+
+#### Primary results
+
+The element `res` contains one data frame per quantity, each with one row per taxon and one column per model coefficient.
+
+| Element | Content |
+|---|---|
+| `lfc` | Log fold change $\hat{\beta}_{ik}$ (natural log) |
+| `se` | Standard error of $\hat{\beta}_{ik}$ |
+| `W` | Test statistic $W_{ik}$ |
+| `p_val`, `q_val` | *p*-value and adjusted *p*-value |
+| `diff_abn` | `TRUE` if the adjusted *p*-value is below `alpha` |
+
+```{r}
+#| label: results
+res <- out$res
+
+tab_obese <- tibble(
+  taxon = res$lfc$taxon,
+  lfc   = res$lfc$bmiobese,
+  se    = res$se$bmiobese,
+  W     = res$W$bmiobese,
+  p     = res$p_val$bmiobese,
+  q     = res$q_val$bmiobese,
+  diff  = res$diff_abn$bmiobese
+) |>
+  arrange(q)
+
+knitr::kable(tab_obese, digits = 3,
+             caption = "Obese versus lean, adjusted for age and region.")
+```
+
+```{r}
+#| label: fig-lfc
+#| fig-cap: "Log fold change (natural log) in absolute abundance, obese versus lean, with 95% confidence intervals. Filled points have an adjusted p-value below 0.05."
+#| fig-width: 7
+#| fig-height: 5.2
+tab_obese |>
+  mutate(taxon = fct_reorder(taxon, lfc)) |>
+  ggplot(aes(x = lfc, y = taxon)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_errorbarh(aes(xmin = lfc - 1.96 * se, xmax = lfc + 1.96 * se),
+                 height = 0, color = "grey40") +
+  geom_point(aes(fill = diff), shape = 21, size = 3, color = "grey20") +
+  scale_fill_manual(values = c(`TRUE` = "#f2775f", `FALSE` = "white"),
+                    guide = "none") +
+  labs(x = "Log fold change (obese versus lean)", y = NULL) +
+  theme_minimal(base_size = 12)
+```
+
+The same extraction applies to every other coefficient, for example `bmioverweight` or `age`.
+
+#### Global test
+
+The global test evaluates, for each taxon, the null hypothesis that the abundance is equal across all levels of `group`.
+
+```{r}
+#| label: global
+out$res_global |>
+  arrange(q_val) |>
+  knitr::kable(digits = 3, caption = "Global test across the three BMI groups.")
+```
+
+#### Structural zeros
+
+A taxon is a structural zero in a group if it is absent from that group. Such a taxon is declared differentially abundant between that group and any group in which it is present, without a test.
+
+```{r}
+#| label: zeros
+zero_ind <- out$zero_ind
+n_struc <- sum(rowSums(zero_ind[, -1, drop = FALSE]) > 0)
+n_struc
+```
+
+In this analysis, `r n_struc` of the `r nrow(zero_ind)` taxa are structural zeros in at least one BMI group.
+
+#### Bias-corrected abundances
+
+The estimated log sampling fractions are returned in `samp_frac`. Subtracting them from the log observed abundances gives bias-corrected log abundances, which are comparable between samples.
+
+```{r}
+#| label: corrected
+samp_frac <- out$samp_frac
+samp_frac[is.na(samp_frac)] <- 0          # samples excluded from the analysis
+
+log_obs  <- log(out$feature_table + 1)
+log_corr <- t(t(log_obs) - samp_frac)
+
+round(log_corr[1:5, 1:4], 2)
+```
+
+#### Session information
+
+```{r}
+#| label: session
+#| code-fold: true
+sessionInfo()
+```
+
+### Python
+
+The code in this tab is shown for reference and is not executed on this page.
+
+ANCOM-BC is available in [scikit-bio](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html) from version 0.7.1.
+
+```bash
+pip install scikit-bio
+```
+
+```python
+import pandas as pd
+from skbio.stats.composition import ancombc
+
+# Counts with samples in rows and taxa in columns; metadata with one row per sample.
+table = pd.read_csv("counts.tsv", sep="\t", index_col=0)
+metadata = pd.read_csv("metadata.tsv", sep="\t", index_col=0)
+
+res = ancombc(table, metadata, formula="age + region + bmi",
+              p_adjust="holm", alpha=0.05)
+```
+
+The arguments and the structure of the result are listed in the [function reference](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html).
+
+### QIIME 2
+
+The command in this tab is shown for reference and is not executed on this page.
+
+ANCOM-BC is an action of the [q2-composition](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc) plugin, which is included in the QIIME 2 amplicon distribution.
+
+```bash
+qiime composition ancombc \
+  --i-table table.qza \
+  --m-metadata-file metadata.tsv \
+  --p-formula 'bmi' \
+  --o-differentials differentials.qza
+```
+
+### Web tool
+
+A web tool for this method is in development. This tab will hold its link and a walk-through at release.
+
+:::
+
+## Citation
+
+Lin H, Peddada SD. Analysis of compositions of microbiomes with bias correction. *Nature Communications* 11:3514 (2020). [doi:10.1038/s41467-020-17041-7](https://doi.org/10.1038/s41467-020-17041-7)
+
+For the Python implementation, also cite: Wu Z, Lin H, Morton JT, Zhu Q. Efficient and scalable Python implementation of ANCOM-BC and ANCOM-BC2 for omics differential abundance testing. *Bioinformatics* 42(10):btag767 (2026). [doi:10.1093/bioinformatics/btag767](https://doi.org/10.1093/bioinformatics/btag767)
+
+## Related methods
+
+- [ANCOM-BC2](ancombc2.qmd): multiple groups, covariate adjustment, and repeated measures.
+- [ANCOM-BC3](ancombc3.qmd): in development.
+- [SECOM](secom.qmd): correlation between taxa, distributed in the same R package.

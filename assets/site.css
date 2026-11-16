@@ -1,0 +1,161 @@
+body { font-size: 17px; line-height: 1.6; }
+a { text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+.navbar { border-bottom: 1px solid var(--line); }
+.navbar-brand { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; }
+.nav-footer { border-top: 1px solid var(--line); font-size: .85rem; }
+main.content h1.title { font-size: 2.3rem; }
+.lead-line { color: var(--ink-2); font-size: 1.1rem; max-width: 46rem; }
+.badge-p, .status { display: inline-block; padding: .1rem .55rem; margin: 0 .25rem .25rem 0; border: 1px solid var(--line-2); border-radius: 999px; font-size: .78rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.badge-p.planned, .status.dev { border-style: dashed; color: var(--muted); }
+.status.released { border-color: var(--accent); color: var(--accent); }
+
+/* ------------------------------------------------------------------ Front page */
+/* A river between two ink-wash banks. Categories are stones in the river and methods are fish.
+   Each category carries its pigment in --c. */
+
+.front { position: relative; overflow: hidden; --paper: #f3efe5; --ink: #252923; --red: #a63d2f; background: var(--paper);
+  --glow: 0 0 5px var(--paper), 0 0 10px var(--paper), 0 0 16px var(--paper); }
+.front::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .32;
+  background-image: repeating-linear-gradient(4deg, rgba(70, 57, 37, .025) 0 1px, transparent 1px 5px), repeating-linear-gradient(94deg, rgba(255, 255, 255, .2) 0 1px, transparent 1px 8px); }
+.scene { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .5s; }
+.front-in { position: relative; z-index: 1; max-width: 1280px; margin: auto; padding: 2.4rem 20px 2rem; }
+.front-head { position: relative; text-align: center; z-index: 3; }
+.eyebrow { font-size: .65rem; letter-spacing: .28em; color: #706e63; margin-bottom: .65rem; }
+.front-head h1 { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .1rem .8rem; margin: 0; border: 0; white-space: nowrap;
+  font-family: "Cormorant Garamond", "Source Serif 4", Georgia, serif; font-size: clamp(2.2rem, 5.2vw, 4.3rem); font-weight: 500; line-height: 1; letter-spacing: -.03em; }
+.front-head h1 em { font-weight: 400; color: var(--red); }
+.front-head p { margin: .7rem 0 0; color: #45493f; font-size: .98rem; }
+.front-head .howto { margin-top: .3rem; color: var(--ink); font-size: .95rem; text-shadow: var(--glow); }
+.seal { writing-mode: vertical-rl; font-family: "Songti SC", "Noto Serif CJK TC", serif; font-size: .8rem; font-weight: 700; line-height: 1;
+  letter-spacing: .12em; font-style: normal; color: #f5eee2; background: var(--red); padding: .34rem .24rem; border-radius: 2px; transform: rotate(3deg); filter: url(#ink-wobble); }
+
+/* Plain list: narrow screens and no JavaScript. */
+.stage { list-style: none; margin: 1.5rem 0 0; padding: 0; position: relative; display: grid; gap: 1.4rem; }
+.stone { display: flex; align-items: center; gap: .9rem; width: 100%; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: default; }
+.stone-art { flex: none; width: 84px; }
+.stone-art svg { display: block; width: 100%; overflow: visible; }
+.stone-body { fill: color-mix(in srgb, var(--c) 34%, #3a3f38); }
+.stone-shadow { fill: #1f2620; opacity: .22; }
+.stone-light { fill: #e9e5d9; opacity: .2; }
+.stone-vein { fill: none; stroke: rgba(15, 18, 15, .55); stroke-width: 1.4; stroke-linecap: round; }
+.stone-water { fill: none; stroke: #51655b; stroke-width: 1.3; stroke-linecap: round; opacity: .45; }
+.stone-name { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: 1.1rem; line-height: 1.2; }
+.stone:focus-visible { outline: 2px solid var(--c); outline-offset: 6px; }
+.school { list-style: none; margin: .1rem 0 0 calc(84px + .9rem); padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+.fish { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .75rem .25rem .45rem; border: 1.5px solid color-mix(in srgb, var(--c) 55%, #252923);
+  border-radius: 999px; background: rgba(243, 239, 229, .9); color: var(--ink); text-decoration: none; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+.sat.dev .fish { border-style: dashed; color: #5d5f55; font-weight: 500; }
+.fish:hover, .fish:focus-visible { background: color-mix(in srgb, var(--c) 16%, var(--paper)); color: var(--ink); outline: none; }
+.koi { width: 34px; height: 16px; flex: none; overflow: visible; }
+.koi-body { fill: #f5f0e4; stroke: #1d211c; stroke-width: 1.8; stroke-linejoin: round; }
+.koi-tail, .koi-fin { fill: rgba(40, 46, 39, .5); stroke: #1d211c; stroke-width: 1.2; stroke-linejoin: round; }
+.koi-patch { fill: var(--red); }
+.koi-eye { fill: #1d211c; }
+.sat.dev .koi-body { fill: rgba(245, 240, 228, .5); stroke-dasharray: 3 2.5; }
+.sat.dev .koi-patch { fill: #9a988c; opacity: .5; }
+.dev-label { font-size: .68rem; font-weight: 400; color: #77756a; }
+
+.caption { text-align: center; color: var(--ink); margin: .6rem auto 0; max-width: 42rem; padding: .7rem 1.2rem; min-height: 5.4rem;
+  background: rgba(243, 239, 229, .9); border: 1px solid #c9c2b5; border-radius: 10px; font-size: .92rem; }
+.caption:empty { visibility: hidden; }
+.caption strong { display: block; font-family: "Source Serif 4", Georgia, serif; font-size: 1.1rem; }
+.caption .badges { display: block; margin-top: .35rem; }
+.filter { text-align: center; margin-top: .8rem; position: relative; z-index: 4; }
+.filter-label { display: block; font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: #55534a; margin-bottom: .5rem; text-shadow: var(--glow); }
+.filter button { margin: 0 .16rem .35rem; padding: .28rem .8rem; border: 1px solid #8e8a7e; border-radius: 999px; background: rgba(243, 239, 229, .85); color: #33372f; font: inherit; font-size: .82rem; cursor: pointer; }
+.filter button:hover { border-color: var(--red); color: var(--red); }
+.filter button[aria-pressed="true"] { background: #30352e; border-color: #30352e; color: var(--paper); }
+.all-methods { display: block; width: fit-content; margin: .4rem auto 0; color: #33372f; font-size: .85rem; text-shadow: var(--glow); }
+.all-methods span { color: var(--red); margin-left: .3rem; }
+.splash { display: none; }
+
+@media (max-width: 899px) {
+  .scene { opacity: .32; }
+  .caption { display: none; }
+  .front-head { margin-bottom: 1.5rem; }
+}
+
+/* Wide screens with JavaScript: stones in the river, fish swimming around them. */
+@keyframes tail { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes ink-spread { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.15) rotate(0deg); } 25% { opacity: .85; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6) rotate(25deg); } }
+@keyframes ripple { 0% { opacity: .75; transform: translate(-50%, -50%) scale(.1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+
+@media (min-width: 900px) {
+  .js .stage { display: block; height: 700px; margin-top: .4rem; }
+  .js .cat { position: absolute; left: var(--px); top: var(--py); width: 0; height: 0; transition: opacity .45s; }
+
+  .js .stone {
+    position: absolute; left: 0; top: 0; width: 240px; margin: -65px 0 0 -120px; display: block; text-align: center; cursor: pointer;
+    transition: transform .5s cubic-bezier(.2, .8, .2, 1);
+  }
+  .js .stone-art { display: block; width: 240px; }
+  .js .stone-body { filter: url(#ink-edge); }
+  .js .stone-shadow { filter: blur(3px); }
+  .js .stone-light { filter: url(#ink-wash); }
+  .js .stone-name {
+    position: absolute; left: 50%; top: 47%; width: 190px; transform: translate(-50%, -50%);
+    color: #f6f1e6; font-size: 1.02rem; line-height: 1.18; text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  }
+
+  /* Fish are positioned every frame by assets/front.js through --fx, --fy and --fa. */
+  .js .school { display: block; margin: 0; position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .js .sat { position: absolute; left: 0; top: 0; transform: translate(var(--fx, 0px), var(--fy, 0px)); transition: opacity .45s; --fs: .5; }
+  .js .fish, .js .sat.dev .fish {
+    position: absolute; left: -66px; top: -30px; width: 132px; padding: 0; border: 0; border-radius: 0; background: none;
+    display: flex; flex-direction: column; align-items: center; gap: 0; font-size: .88rem;
+  }
+  .js .fish:hover, .js .fish:focus-visible { background: none; }
+  .js .koi { width: 100px; height: 60px; transform: rotate(var(--fa, 0deg)); filter: url(#ink-wobble); scale: var(--fs, 1); transition: scale .6s cubic-bezier(.2, .8, .2, 1); }
+  .js .koi path, .js .koi circle { transition: fill .6s, opacity .6s, stroke .6s; }
+  /* At rest: a small, still ink fish without a name; it cannot be selected. */
+  .js .cat:not(.open) .fish { pointer-events: none; }
+  .js .cat:not(.open) .koi { opacity: .78; }
+  .js .cat:not(.open) .koi-body { fill: #1d211c; stroke: #1d211c; stroke-dasharray: none; }
+  .js .cat:not(.open) .koi-tail, .js .cat:not(.open) .koi-fin { fill: #1d211c; }
+  .js .cat:not(.open) .koi-patch, .js .cat:not(.open) .koi-eye { opacity: 0; }
+  .js .cat:not(.open) .sat.dev .koi { opacity: .4; }
+  .js .cat:not(.open) .sat-name, .js .cat:not(.open) .dev-label { opacity: 0; }
+  .js .sat-name, .js .dev-label { transition: opacity .5s, font-size .3s, border-color .2s; }
+  .js .stage.filtering .sat:not(.off) .sat-name { opacity: 1; }
+  .js .koi-tail { transform-box: fill-box; transform-origin: 100% 50%; animation: tail .55s ease-in-out infinite alternate; }
+  .js .sat.resting .koi-tail { animation-play-state: paused; }
+  .js .cat.open .sat.resting .koi-tail { animation-play-state: running; animation-duration: 1.3s; }
+  .js .sat-name { margin-top: -2px; padding: 0 .3rem; text-shadow: var(--glow); border-bottom: 2px solid transparent; }
+  .js .dev-label { font-size: .62rem; text-shadow: var(--glow); }
+  .js .cat.open .sat { --fs: 1.2; }
+  .js .cat.open .sat-name { font-size: 1rem; }
+  .js .sat .fish:hover, .js .sat .fish:focus-visible { --fs: 1.65; outline: none; z-index: 2; }
+  .js .sat .fish:hover .sat-name, .js .sat .fish:focus-visible .sat-name { font-size: 1.12rem; border-bottom-color: var(--red); }
+  .js .sat .fish:hover .koi, .js .sat .fish:focus-visible .koi { scale: 1.65; }
+
+  /* One stone is active: it grows, and the other stones, their fish, and the landscape recede. */
+  .js .cat.open { z-index: 3; }
+  .js .cat.open .stone { transform: scale(1.18); }
+  .js .stage.has-open .cat:not(.open) { opacity: .28; }
+  .js .front.focus .scene { opacity: .3; }
+  .js .stage.filtering .sat.off { opacity: .15; }
+
+  /* Selecting a fish: ink spreads and ripples widen from it. */
+  .js .splash { display: block; position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 5; }
+  .js .splash b {
+    position: absolute; left: 0; top: 0; width: 260px; height: 220px; border-radius: 48% 52% 43% 57% / 52% 46% 54% 48%;
+    background: radial-gradient(closest-side, rgba(20, 24, 20, .9), rgba(32, 40, 33, .5) 45%, transparent 100%);
+    filter: url(#ink-bleed); opacity: 0; animation: ink-spread 1s ease-out forwards;
+  }
+  .js .splash b + b { width: 150px; height: 130px; background: radial-gradient(closest-side, rgba(166, 61, 47, .8), rgba(166, 61, 47, .3) 50%, transparent 100%); animation-duration: .8s; animation-delay: .08s; }
+  .js .splash i { position: absolute; left: 0; top: 0; width: 420px; height: 170px; border: 1.6px solid #3f554b; border-radius: 50%; opacity: 0; animation: ripple 1s ease-out forwards; }
+  .js .splash i:nth-of-type(2) { animation-delay: .15s; width: 300px; height: 120px; }
+  .js .splash i:nth-of-type(3) { animation-delay: .3s; width: 190px; height: 76px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene, .cat, .stone, .sat, .koi, .koi-tail { transition: none !important; animation: none !important; }
+  .splash { display: none !important; }
+}
+
+.method-meta { margin:-.5rem 0 1.5rem; }
+.method-meta .area { color:var(--muted); font-size:.9rem; margin-right:.6rem; }
+main.content table { font-size:.95rem; }
+main.content table code { white-space:nowrap; }
+.dev-note { border-left:3px solid var(--line-2); padding:.2rem 0 .2rem 1rem; color:var(--ink-2); }

@@ -1,0 +1,26 @@
+---
+title: "Tutorials"
+---
+
+## Package tutorials
+
+| Method | Platform | Tutorial |
+|---|---|---|
+| ANCOM-BC | R | [ANCOM-BC vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC.html) |
+| ANCOM-BC | Python | [scikit-bio `ancombc` reference and example](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html) |
+| ANCOM-BC2 | R | [ANCOM-BC2 vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html) |
+| ANCOM-BC2 | Python | [scikit-bio `ancombc2` reference and example](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc2.html) |
+| ANCOM-BC, ANCOM-BC2 | QIIME 2 | [q2-composition plugin reference](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html) |
+| SECOM | R | [SECOM vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/SECOM.html) |
+| All ANCOMBC functions | R | [Data sanity check vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/data_sanity_check.html) |
+| MetVAE | Python | [PyPI project page](https://pypi.org/project/metvae/) |
+
+## Extended tutorials
+
+Extended tutorials are worked analyses with executed code and output. Each one is part of the page of its method.
+
+| Method | Platform | Tutorial |
+|---|---|---|
+| ANCOM-BC | R | [Differential abundance between BMI groups in the HITChip Atlas data](../tools/ancombc.qmd#extended-tutorial-r) |
+| ANCOM-BC2 | R | [Multigroup comparison of BMI groups: global, pairwise, Dunnett-type, and trend tests](../tools/ancombc2.qmd#extended-tutorial-r) |
+| SECOM | R | [Linear and distance correlation between taxa in the HITChip Atlas data](../tools/secom.qmd#extended-tutorial-r) |

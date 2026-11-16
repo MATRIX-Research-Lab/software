@@ -1,0 +1,23 @@
+---
+title: "AMMA"
+description: "Mediation analysis with microbiome mediators."
+area: "Microbiome mediation"
+order: 1
+status: in development
+platforms:
+  - name: R
+    status: planned
+  - name: Python
+    status: planned
+  - name: Web tool
+    status: planned
+related: []
+---
+
+::: {.method-meta}
+[Microbiome mediation]{.area} [in development]{.status .dev} [R]{.badge-p .planned} [Python]{.badge-p .planned} [Web tool]{.badge-p .planned}
+:::
+
+::: {.dev-note}
+AMMA is in development. Planned distribution: an R package, a Python package on PyPI, and a web tool. Documentation and tutorials will be published on this page at release.
+:::

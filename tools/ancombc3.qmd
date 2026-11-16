@@ -1,0 +1,28 @@
+---
+title: "ANCOM-BC3"
+description: "The next method in the ANCOM-BC family for microbiome differential abundance analysis."
+area: "Microbiome differential abundance"
+order: 3
+status: in development
+platforms:
+  - name: R
+    status: planned
+  - name: Python
+    status: planned
+  - name: Web tool
+    status: planned
+related: [ancombc, ancombc2]
+---
+
+::: {.method-meta}
+[Microbiome differential abundance]{.area} [in development]{.status .dev} [R]{.badge-p .planned} [Python]{.badge-p .planned} [Web tool]{.badge-p .planned}
+:::
+
+::: {.dev-note}
+ANCOM-BC3 is in development. Planned distribution: the ANCOMBC R package on Bioconductor, a Python package on PyPI, and a web tool. Documentation and tutorials will be published on this page at release.
+:::
+
+## Related methods
+
+- [ANCOM-BC](ancombc.qmd)
+- [ANCOM-BC2](ancombc2.qmd)

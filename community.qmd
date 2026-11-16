@@ -1,0 +1,25 @@
+---
+title: "Community"
+---
+
+[Questions, comments, and reports about any tool on this site.]{.lead-line}
+
+## Discussion forum
+
+The discussion forum for all MATRIX software is hosted on [GitHub Discussions](https://github.com/MATRIX-Research-Lab/software/discussions), with one category per method. A GitHub account is required to post.
+
+## Bug reports
+
+Report a reproducible error in the repository of the corresponding package.
+
+| Software | Issue tracker |
+|---|---|
+| ANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM | [FrederickHuangLin/ANCOMBC](https://github.com/FrederickHuangLin/ANCOMBC/issues) |
+| scikit-bio (Python): ANCOM-BC, ANCOM-BC2 | [scikit-bio/scikit-bio](https://github.com/scikit-bio/scikit-bio/issues) |
+| q2-composition (QIIME 2) | [QIIME 2 Forum](https://forum.qiime2.org/) |
+| MetVAE (Python) | [FrederickHuangLin/MetVAE-PyPI](https://github.com/FrederickHuangLin/MetVAE-PyPI/issues) |
+
+## Platform support sites
+
+- [Bioconductor Support](https://support.bioconductor.org/tag/ANCOMBC/) for questions about the ANCOMBC R package.
+- [QIIME 2 Forum](https://forum.qiime2.org/) for questions about the QIIME 2 plugin.

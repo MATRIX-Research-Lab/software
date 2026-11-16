@@ -1,0 +1,26 @@
+[
+  {
+    "listing": "/tools/index.html",
+    "items": [
+      "/tools/metvae.html",
+      "/tools/secom.html",
+      "/tools/ancombc.html",
+      "/tools/ancombc2.html",
+      "/tools/ancombc3.html",
+      "/tools/amma.html",
+      "/tools/diagmi.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/tools/amma.html",
+      "/tools/ancombc.html",
+      "/tools/diagmi.html",
+      "/tools/metvae.html",
+      "/tools/secom.html",
+      "/tools/ancombc2.html",
+      "/tools/ancombc3.html"
+    ]
+  }
+]
