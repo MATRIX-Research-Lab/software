@@ -1,42 +1,348 @@
 ---
 title: "MetVAE"
-description: "Correlation-based molecular networks from untargeted metabolomics data, estimated with a variational autoencoder."
+description: "Sparse correlation networks from untargeted metabolomics data, with variational autoencoder imputation of values below the detection limit."
 area: "Metabolomics correlation"
 order: 1
 status: released
 platforms:
+  - name: R
+    url: https://github.com/MATRIX-Research-Lab/MetVAE
   - name: Python
     url: https://pypi.org/project/metvae/
   - name: GNPS
-    url: https://github.com/ziluwang829/GNPS_Local/tree/metvae-integration
-    status: planned
-  - name: R
-    status: planned
-related: [secom]
+    url: https://github.com/Some-Earth-2514/GNPS_Local
+related: [secom, triger]
+tutorial: true
+toc: true
+toc-depth: 2
+toc-title: "On this page"
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    comment: "#>"
 ---
 
 ::: {.method-meta}
-[Metabolomics correlation]{.area} [released]{.status .released} [Python]{.badge-p} [GNPS]{.badge-p .planned} [R]{.badge-p .planned}
+[Metabolomics correlation]{.area} [released]{.status .released} [R]{.badge-p} [Python]{.badge-p} [GNPS]{.badge-p}
 :::
 
-MetVAE constructs a correlation network from untargeted metabolomics data. A variational autoencoder imputes values below the detection limit, covariate effects are removed, and a sparse correlation matrix between metabolite features is estimated.
+MetVAE constructs a correlation network from untargeted metabolomics data. Zeros in the abundance table are treated as values below the detection limit and imputed by a variational autoencoder. The effects of the specified sample covariates are removed, and a sparse correlation matrix between metabolite features is estimated. Pairs are retained either by Fisher *z*-tests with multiple-testing correction (`sparse_by_p`) or by the sparse estimation of correlation (SEC) estimator with a penalty selected by cross-validation (`sparse_by_sec`).
 
 ## Platforms
 
 | Platform | Package | Install | Documentation |
 |---|---|---|---|
-| Python | metvae (PyPI), with the command-line tool `metvae-cli` | `pip install metvae` | [PyPI](https://pypi.org/project/metvae/) · [GitHub](https://github.com/FrederickHuangLin/MetVAE-PyPI) |
-| GNPS | GNPS_Local, an offline single-user version of GNPS molecular networking | In development | [Integration branch](https://github.com/ziluwang829/GNPS_Local/tree/metvae-integration) · [GNPS_Local](https://github.com/Some-Earth-2514/GNPS_Local) |
-| R | R package | In development | |
+| R | MetVAE | `BiocManager::install("MATRIX-Research-Lab/MetVAE")`, then `torch::install_torch()` | [GitHub](https://github.com/MATRIX-Research-Lab/MetVAE) · `vignette("MetVAE")` |
+| Python | metvae (PyPI) | `pip install metvae` | [PyPI](https://pypi.org/project/metvae/) · [GitHub](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI) |
+| GNPS | GNPS_Local | See the documentation | [GitHub](https://github.com/Some-Earth-2514/GNPS_Local) · [Documentation](https://some-earth-2514.github.io/GNPS_Local_Documentation/) |
 
-## Quick start
+The R package is installed from GitHub; its Bioconductor submission is under review. GNPS_Local is an offline, single-user version of GNPS molecular networking with a graphical interface.
+
+## Extended tutorial
+
+The R tutorial estimates a metabolite correlation network from the stool metabolomes of the PRISM and validation cohorts of Franzosa et al. (2019), which include patients with Crohn's disease (CD), patients with ulcerative colitis (UC), and controls. The data are the processed tables of the curated microbiome–metabolome collection of Muller et al. (2022). The network is adjusted for diagnosis, age, and cohort, so that it describes the co-variation of metabolites within these strata.
+
+Select a platform.
+
+::: {.panel-tabset group="platform"}
+
+### R
+
+#### Model
+
+Let $y_{ij}$ denote the abundance of metabolite $j$ in sample $i$, for $i = 1, \ldots, n$ and $j = 1, \ldots, p$, and let $z_{ij}$ denote its value on the centered log-ratio (CLR) scale. Let $\mathbf{x}_i$ denote the covariate vector of sample $i$. MetVAE assumes the left-censored normal model
+
+$$
+z_{ij} = \mu_j + \mathbf{x}_i^\top \boldsymbol{\gamma}_j + \sigma_j \varepsilon_{ij}, \qquad \varepsilon_{ij} \sim N(0, 1),
+$$
+
+in which a zero is recorded when the abundance falls below the detection limit. The parameters $\mu_j$, $\boldsymbol{\gamma}_j$, and $\sigma_j$ are estimated under censoring, and the covariate effects are removed. A variational autoencoder trained on the adjusted data imputes the censored values $M$ times. For imputation $s$, let $\tilde{z}^{(s)}_{ij}$ denote the completed adjusted data. The correlation of metabolites $j$ and $k$ is estimated from the variance of their log ratio,
+
+$$
+\hat{r}^{(s)}_{jk} = \frac{\widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot j}\big) + \widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot k}\big) - \widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot j} - \tilde{z}^{(s)}_{\cdot k}\big)}{2 \, \widehat{\mathrm{SD}}\big(\tilde{z}^{(s)}_{\cdot j}\big) \, \widehat{\mathrm{SD}}\big(\tilde{z}^{(s)}_{\cdot k}\big)},
+$$
+
+and the estimate $\hat{r}_{jk}$ is the mean of $\hat{r}^{(s)}_{jk}$ over the $M$ imputations, after entries with $|\hat{r}^{(s)}_{jk}|$ below a threshold are set to zero.
+
+Two procedures produce a sparse network. The first tests $H_0: r_{jk} = 0$ with
+
+$$
+T_{jk} = \operatorname{atanh}(\hat{r}_{jk}) \sqrt{n - 3}
+$$
+
+and retains the pairs whose adjusted *p*-value is below a cutoff. The second, SEC (Cui, Leng and Sun, 2016), solves
+
+$$
+\hat{\mathbf{R}} = \operatorname*{arg\,min}_{\mathbf{R}} \; \tfrac{1}{2} \lVert \mathbf{R} - \hat{\mathbf{R}}_0 \rVert_F^2 + \rho \sum_{j \ne k} \frac{|R_{jk}|}{|\hat{r}_{jk}|}
+\quad \text{subject to} \quad \lambda_{\min}(\mathbf{R}) \ge \epsilon,
+$$
+
+where $\hat{\mathbf{R}}_0$ is the matrix of the estimates $\hat{r}_{jk}$, and the penalty $\rho$ is selected by cross-validation.
+
+#### Data
+
+The metabolomics table has one row per sample and one column per LC-MS feature. The tutorial retains the features with a compound name. Features with the same HMDB identifier, or without one and with names that differ only by a trailing asterisk, are treated as one compound, and for each compound the feature with the smallest proportion of zeros is retained.
+
+```{r}
+#| label: setup
+library(MetVAE)
+library(tidyverse)
+library(igraph)
+
+url <- paste0("https://raw.githubusercontent.com/borenstein-lab/",
+              "microbiome-metabolome-curated-data/main/data/processed_data/",
+              "FRANZOSA_IBD_2019/")
+
+meta <- read.delim(paste0(url, "metadata.tsv"), check.names = FALSE)
+fmap <- read.delim(paste0(url, "mtb.map.tsv"), check.names = FALSE)
+mtb  <- read.delim(paste0(url, "mtb.tsv"), check.names = FALSE, row.names = 1)
+mtb  <- as.matrix(mtb)
+
+# Features with a compound name; one feature per compound.
+named <- fmap |>
+  filter(!is.na(Compound.Name), Compound %in% colnames(mtb)) |>
+  mutate(name = str_remove(Compound.Name, "[*]+$"),
+         key  = coalesce(HMDB, name),
+         zero = colMeans(mtb[, Compound] == 0),
+         med  = apply(mtb[, Compound], 2, median)) |>
+  arrange(key, zero, desc(med)) |>
+  distinct(key, .keep_all = TRUE) |>
+  distinct(name, .keep_all = TRUE)
+
+y <- mtb[, named$Compound]
+colnames(y) <- named$name
+dim(y)
+```
+
+```{r}
+#| label: meta
+meta <- meta |>
+  mutate(diagnosis = factor(Study.Group, levels = c("Control", "CD", "UC")),
+         cohort    = factor(if_else(str_starts(Sample, "PRISM"), "PRISM", "Validation"))) |>
+  column_to_rownames("Sample")
+
+table(Diagnosis = meta$diagnosis, Cohort = meta$cohort)
+```
+
+```{r}
+#| label: fig-zeros
+#| fig-cap: "Proportion of zeros of each metabolite. Metabolites to the right of the dashed line are removed by the default filter of metvae()."
+#| fig-width: 7
+#| fig-height: 3.2
+tibble(zero = colMeans(y == 0)) |>
+  ggplot(aes(x = zero)) +
+  geom_histogram(binwidth = 0.025, boundary = 0, fill = "grey70", color = "grey30") +
+  geom_vline(xintercept = 0.3, linetype = "dashed") +
+  labs(x = "Proportion of zeros", y = "Number of metabolites") +
+  theme_minimal(base_size = 12)
+```
+
+#### Fitting the model
+
+```{r}
+#| label: fit
+fit <- metvae(y, meta = meta[, c("Age", "diagnosis", "cohort")],
+              continuous_covariate_keys = "Age",
+              categorical_covariate_keys = c("diagnosis", "cohort"),
+              feature_zero_threshold = 0.3,
+              seed = 1L)
+```
+
+| Argument | Role |
+|---|---|
+| `meta` | Sample metadata, with the sample names as row names. |
+| `continuous_covariate_keys` | Numeric covariates; they are centered and scaled. |
+| `categorical_covariate_keys` | Categorical covariates, coded by indicators with the first level as reference. |
+| `feature_zero_threshold` | Metabolites with a larger proportion of zeros are removed. |
+| `seed` | Seed of the initialization, the batch order, and the imputations. |
+
+```{r}
+#| label: fig-loss
+#| fig-cap: "Training loss of the variational autoencoder by epoch."
+#| fig-width: 7
+#| fig-height: 3
+tibble(epoch = seq_along(fit$train_loss), loss = fit$train_loss) |>
+  ggplot(aes(x = epoch, y = loss)) +
+  geom_line(color = "grey30") +
+  labs(x = "Epoch", y = "Loss") +
+  theme_minimal(base_size = 12)
+```
+
+#### Correlation estimate
+
+`get_corr()` imputes the zeros `num_sim` times and averages the correlation matrices of the completed data sets.
+
+```{r}
+#| label: corr
+fit <- get_corr(fit, num_sim = 100L, threshold = 0.2)
+p <- length(fit$feature_names)
+p
+```
+
+The analysis retains `r p` of the `r ncol(y)` metabolites, which give `r format(p * (p - 1) / 2, big.mark = ",")` pairs.
+
+#### Sparse networks
+
+```{r}
+#| label: sparse
+res_p   <- sparse_by_p(fit, p_adj_method = "fdr_bh", cutoff = 0.05)
+res_sec <- sparse_by_sec(fit, c_grid = c(0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8),
+                         refine = FALSE, seed = 1L)
+
+n_edges <- function(m) (Matrix::nnzero(m) - nrow(m)) / 2
+c(fdr = n_edges(res_p$sparse_estimate), sec = n_edges(res_sec$sparse_estimate))
+```
+
+```{r}
+#| label: fig-cv
+#| fig-cap: "Cross-validation error of SEC by penalty. The dashed line marks the selected penalty."
+#| fig-width: 7
+#| fig-height: 3
+res_sec$scores_by_rho |>
+  ggplot(aes(x = rho, y = score)) +
+  geom_line(color = "grey30") +
+  geom_point(size = 1.5) +
+  geom_vline(xintercept = res_sec$best_rho, linetype = "dashed") +
+  scale_x_log10() +
+  labs(x = expression(rho ~ "(log scale)"), y = "Validation error") +
+  theme_minimal(base_size = 12)
+```
+
+The grid of the penalty is $\rho = c \sqrt{\log p / n}$ for the listed values of $c$. The validation error decreases as $\rho$ decreases over the whole grid, and cross-validation selects the smallest value, $\rho =$ `r signif(res_sec$best_rho, 3)`. In these data the penalty therefore shrinks the estimate little, and the zeros of the SEC estimate arise mainly from the thresholds of `get_corr()` (0.2) and `sparse_by_sec()` (0.1).
+
+#### Results
+
+The pairs retained by SEC, with the strongest correlations first:
+
+```{r}
+#| label: pairs
+class_of <- setNames(coalesce(named$Putative.Chemical.Class, "Not assigned"), named$name)
+
+edges <- Matrix::summary(res_sec$sparse_estimate) |>
+  as_tibble() |>
+  filter(i < j) |>
+  transmute(metabolite_1 = fit$feature_names[i],
+            metabolite_2 = fit$feature_names[j],
+            r = x,
+            class_1 = class_of[metabolite_1],
+            class_2 = class_of[metabolite_2]) |>
+  arrange(desc(abs(r)))
+
+knitr::kable(head(edges, 15), digits = 2,
+             caption = "Metabolite pairs with the largest absolute SEC correlation.")
+```
+
+```{r}
+#| label: agreement
+both <- edges |>
+  mutate(fdr = as.matrix(res_p$sparse_estimate)[cbind(metabolite_1, metabolite_2)] != 0)
+mean(both$fdr)
+```
+
+Of the pairs retained by SEC, a proportion of `r round(mean(both$fdr), 2)` are also retained by the Fisher *z*-tests at a false discovery rate of 0.05.
+
+```{r}
+#| label: fig-network
+#| fig-cap: "Pairs with an absolute SEC correlation of at least 0.7. Node color is the putative chemical class; gray nodes belong to other classes. Solid edges are positive and dashed edges negative correlations."
+#| fig-width: 8
+#| fig-height: 7.5
+strong <- filter(edges, abs(r) >= 0.7)
+g <- graph_from_data_frame(strong[, c("metabolite_1", "metabolite_2", "r")], directed = FALSE)
+
+top_class <- setdiff(names(sort(table(class_of[V(g)$name]), decreasing = TRUE)), "Not assigned")[1:6]
+palette   <- setNames(c("#a63d2f", "#476e61", "#a47b36", "#625d78", "#466675", "#c26743"), top_class)
+V(g)$color <- coalesce(palette[class_of[V(g)$name]], "grey80")
+# Label the metabolite with the most pairs in each cluster of at least five metabolites.
+comp <- components(g)$membership
+hub  <- tapply(seq_len(vcount(g)), comp, function(v) v[which.max(degree(g)[v])])
+big  <- as.integer(names(which(table(comp) >= 5)))
+V(g)$label <- NA_character_
+V(g)$label[hub[as.character(big)]] <- V(g)$name[hub[as.character(big)]]
+
+set.seed(1)
+plot(g, layout = layout_with_fr(g), vertex.size = 4, vertex.frame.color = "grey30",
+     vertex.label.cex = 0.7, vertex.label.color = "black", vertex.label.dist = 1.2,
+     edge.lty = if_else(E(g)$r > 0, 1, 2), edge.color = "grey55",
+     edge.width = 2 * abs(E(g)$r))
+legend("bottomleft", legend = top_class, fill = palette, bty = "n", cex = 0.7)
+```
+
+The network has `r vcount(g)` metabolites and `r ecount(g)` pairs with an absolute correlation of at least 0.7. In each connected cluster of at least five metabolites, the metabolite with the most pairs is labeled.
+
+#### Export
+
+`export_graphml()` returns one `igraph` network per cutoff of the absolute correlation and writes each as a GraphML file, which Cytoscape reads.
+
+```{r}
+#| label: export
+#| eval: false
+networks <- export_graphml(res_sec, cutoffs = c(0.5, 0.7), output_dir = "networks")
+```
+
+#### Session information
+
+```{r}
+#| label: session
+#| code-fold: true
+sessionInfo()
+```
+
+### Python
+
+The code in this tab is shown for reference and is not executed on this page. It applies the same analysis to the same data.
 
 ```bash
 pip install metvae
-metvae-cli --help
 ```
 
-The Python interface and a worked example are described on the [PyPI project page](https://pypi.org/project/metvae/).
+```python
+import pandas as pd
+from metvae.model import MetVAE
+
+url = ("https://raw.githubusercontent.com/borenstein-lab/"
+       "microbiome-metabolome-curated-data/main/data/processed_data/"
+       "FRANZOSA_IBD_2019/")
+meta = pd.read_csv(url + "metadata.tsv", sep="\t", index_col="Sample")
+fmap = pd.read_csv(url + "mtb.map.tsv", sep="\t")
+mtb = pd.read_csv(url + "mtb.tsv", sep="\t", index_col=0)
+
+# Features with a compound name; one feature per compound.
+named = fmap[fmap["Compound.Name"].notna() & fmap["Compound"].isin(mtb.columns)].copy()
+named["name"] = named["Compound.Name"].str.replace(r"\*+$", "", regex=True)
+named["key"] = named["HMDB"].fillna(named["name"])
+named["zero"] = (mtb[named["Compound"]] == 0).mean().values
+named = (named.sort_values(["key", "zero"]).drop_duplicates("key")
+              .drop_duplicates("name"))
+y = mtb[named["Compound"]]
+y.columns = named["name"]
+
+meta["diagnosis"] = pd.Categorical(meta["Study.Group"], ["Control", "CD", "UC"])
+meta["cohort"] = ["PRISM" if s.startswith("PRISM") else "Validation" for s in meta.index]
+
+model = MetVAE(data=y, meta=meta[["Age", "diagnosis", "cohort"]],
+               continuous_covariate_keys=["Age"],
+               categorical_covariate_keys=["diagnosis", "cohort"])
+model.train()
+model.get_corr()
+
+results_p = model.sparse_by_p()
+results_sec = model.sparse_by_sec()
+```
+
+The arguments and the structure of the results are described in the [package README](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI), and the [example notebooks](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI/tree/main/notebooks) include an analysis of a hepatocellular carcinoma data set with 7,217 metabolites.
+
+### GNPS
+
+GNPS_Local runs GNPS feature-based molecular networking on a local computer and provides MetVAE through a graphical interface. Installation and use are described in the [GNPS_Local documentation](https://some-earth-2514.github.io/GNPS_Local_Documentation/).
+
+:::
+
+## Data sources
+
+Franzosa EA, Sirota-Madi A, Avila-Pacheco J, et al. Gut microbiome structure and metabolic activity in inflammatory bowel disease. *Nature Microbiology* 4:293–305 (2019). [doi:10.1038/s41564-018-0306-4](https://doi.org/10.1038/s41564-018-0306-4)
+
+Muller E, Algavi YM, Borenstein E. The gut microbiome-metabolome dataset collection: a curated resource for integrative meta-analysis. *npj Biofilms and Microbiomes* 8:79 (2022). [doi:10.1038/s41522-022-00345-5](https://doi.org/10.1038/s41522-022-00345-5)
 
 ## Citation
 
@@ -45,3 +351,4 @@ Lin H, Zhang L, Lotfi A, Jarmusch A, Lee I, Kim A, Morton JT, Aksenov A. Protoco
 ## Related methods
 
 - [SECOM](secom.qmd): correlation between taxa in microbiome data.
+- [TriGer](triger.qmd): modules of features associated across two omics layers.

@@ -13,7 +13,11 @@ title: "Tutorials"
 | ANCOM-BC, ANCOM-BC2 | QIIME 2 | [q2-composition plugin reference](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html) |
 | SECOM | R | [SECOM vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/SECOM.html) |
 | All ANCOMBC functions | R | [Data sanity check vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/data_sanity_check.html) |
-| MetVAE | Python | [PyPI project page](https://pypi.org/project/metvae/) |
+| MetVAE | R | [MetVAE vignette](https://github.com/MATRIX-Research-Lab/MetVAE/blob/main/vignettes/MetVAE.Rmd) |
+| MetVAE | Python | [Complete example](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI#a-complete-example) and [example notebooks](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI/tree/main/notebooks) |
+| MetVAE | GNPS | [GNPS_Local documentation](https://some-earth-2514.github.io/GNPS_Local_Documentation/) |
+| TriGer | R | [TriGer vignette](https://github.com/MATRIX-Research-Lab/TriGer/blob/main/vignettes/TriGer.Rmd) |
+| TriGer | Python | [Quick start and functions](https://github.com/MATRIX-Research-Lab/TriGer-PyPI#quick-start) |
 
 ## Extended tutorials
 
@@ -21,6 +25,8 @@ Extended tutorials are worked analyses with executed code and output. Each one i
 
 | Method | Platform | Tutorial |
 |---|---|---|
-| ANCOM-BC | R | [Differential abundance between BMI groups in the HITChip Atlas data](../tools/ancombc.qmd#extended-tutorial-r) |
-| ANCOM-BC2 | R | [Multigroup comparison of BMI groups: global, pairwise, Dunnett-type, and trend tests](../tools/ancombc2.qmd#extended-tutorial-r) |
-| SECOM | R | [Linear and distance correlation between taxa in the HITChip Atlas data](../tools/secom.qmd#extended-tutorial-r) |
+| ANCOM-BC | R | [Differential abundance between BMI groups in the HITChip Atlas data](../tools/ancombc.qmd#extended-tutorial) |
+| ANCOM-BC2 | R | [Multigroup comparison of BMI groups: global, pairwise, Dunnett-type, and trend tests](../tools/ancombc2.qmd#extended-tutorial) |
+| SECOM | R | [Linear and distance correlation between taxa in the HITChip Atlas data](../tools/secom.qmd#extended-tutorial) |
+| MetVAE | R | [Metabolite correlation network in stool metabolomes from patients with inflammatory bowel disease and controls](../tools/metvae.qmd#extended-tutorial) |
+| TriGer | R | [Modules of gut bacterial genera and stool metabolites in inflammatory bowel disease and controls](../tools/triger.qmd#extended-tutorial) |

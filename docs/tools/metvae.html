@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Correlation-based molecular networks from untargeted metabolomics data, estimated with a variational autoencoder.">
+<meta name="description" content="Sparse correlation networks from untargeted metabolomics data, with variational autoencoder imputation of values below the detection limit.">
 
 <title>MetVAE – Open-Source Software</title>
 <style>
@@ -111,11 +111,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -161,7 +190,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#platforms" id="toc-platforms" class="nav-link active" data-scroll-target="#platforms">Platforms</a></li>
+  <li><a href="#extended-tutorial" id="toc-extended-tutorial" class="nav-link" data-scroll-target="#extended-tutorial">Extended tutorial</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data sources</a></li>
+  <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
+  <li><a href="#related-methods" id="toc-related-methods" class="nav-link" data-scroll-target="#related-methods">Related methods</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
@@ -172,7 +213,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    Correlation-based molecular networks from untargeted metabolomics data, estimated with a variational autoencoder.
+    Sparse correlation networks from untargeted metabolomics data, with variational autoencoder imputation of values below the detection limit.
   </div>
 </div>
 
@@ -190,9 +231,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="method-meta">
-<p><span class="area">Metabolomics correlation</span> <span class="status released">released</span> <span class="badge-p">Python</span> <span class="badge-p planned">GNPS</span> <span class="badge-p planned">R</span></p>
+<p><span class="area">Metabolomics correlation</span> <span class="status released">released</span> <span class="badge-p">R</span> <span class="badge-p">Python</span> <span class="badge-p">GNPS</span></p>
 </div>
-<p>MetVAE constructs a correlation network from untargeted metabolomics data. A variational autoencoder imputes values below the detection limit, covariate effects are removed, and a sparse correlation matrix between metabolite features is estimated.</p>
+<p>MetVAE constructs a correlation network from untargeted metabolomics data. Zeros in the abundance table are treated as values below the detection limit and imputed by a variational autoencoder. The effects of the specified sample covariates are removed, and a sparse correlation matrix between metabolite features is estimated. Pairs are retained either by Fisher <em>z</em>-tests with multiple-testing correction (<code>sparse_by_p</code>) or by the sparse estimation of correlation (SEC) estimator with a penalty selected by cross-validation (<code>sparse_by_sec</code>).</p>
 <section id="platforms" class="level2">
 <h2 class="anchored" data-anchor-id="platforms">Platforms</h2>
 <table class="caption-top table">
@@ -206,31 +247,533 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>Python</td>
-<td>metvae (PyPI), with the command-line tool <code>metvae-cli</code></td>
-<td><code>pip install metvae</code></td>
-<td><a href="https://pypi.org/project/metvae/">PyPI</a> · <a href="https://github.com/FrederickHuangLin/MetVAE-PyPI">GitHub</a></td>
+<td>R</td>
+<td>MetVAE</td>
+<td><code>BiocManager::install("MATRIX-Research-Lab/MetVAE")</code>, then <code>torch::install_torch()</code></td>
+<td><a href="https://github.com/MATRIX-Research-Lab/MetVAE">GitHub</a> · <code>vignette("MetVAE")</code></td>
 </tr>
 <tr class="even">
-<td>GNPS</td>
-<td>GNPS_Local, an offline single-user version of GNPS molecular networking</td>
-<td>In development</td>
-<td><a href="https://github.com/ziluwang829/GNPS_Local/tree/metvae-integration">Integration branch</a> · <a href="https://github.com/Some-Earth-2514/GNPS_Local">GNPS_Local</a></td>
+<td>Python</td>
+<td>metvae (PyPI)</td>
+<td><code>pip install metvae</code></td>
+<td><a href="https://pypi.org/project/metvae/">PyPI</a> · <a href="https://github.com/MATRIX-Research-Lab/MetVAE-PyPI">GitHub</a></td>
 </tr>
 <tr class="odd">
-<td>R</td>
-<td>R package</td>
-<td>In development</td>
-<td></td>
+<td>GNPS</td>
+<td>GNPS_Local</td>
+<td>See the documentation</td>
+<td><a href="https://github.com/Some-Earth-2514/GNPS_Local">GitHub</a> · <a href="https://some-earth-2514.github.io/GNPS_Local_Documentation/">Documentation</a></td>
 </tr>
 </tbody>
 </table>
+<p>The R package is installed from GitHub; its Bioconductor submission is under review. GNPS_Local is an offline, single-user version of GNPS molecular networking with a graphical interface.</p>
 </section>
-<section id="quick-start" class="level2">
-<h2 class="anchored" data-anchor-id="quick-start">Quick start</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install metvae</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">metvae-cli</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The Python interface and a worked example are described on the <a href="https://pypi.org/project/metvae/">PyPI project page</a>.</p>
+<section id="extended-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="extended-tutorial">Extended tutorial</h2>
+<p>The R tutorial estimates a metabolite correlation network from the stool metabolomes of the PRISM and validation cohorts of Franzosa et al.&nbsp;(2019), which include patients with Crohn’s disease (CD), patients with ulcerative colitis (UC), and controls. The data are the processed tables of the curated microbiome–metabolome collection of Muller et al.&nbsp;(2022). The network is adjusted for diagnosis, age, and cohort, so that it describes the co-variation of metabolites within these strata.</p>
+<p>Select a platform.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="platform">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">GNPS</a></li></ul>
+<div class="tab-content" data-group="platform">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<section id="model" class="level4">
+<h4 class="anchored" data-anchor-id="model">Model</h4>
+<p>Let <span class="math inline">\(y_{ij}\)</span> denote the abundance of metabolite <span class="math inline">\(j\)</span> in sample <span class="math inline">\(i\)</span>, for <span class="math inline">\(i = 1, \ldots, n\)</span> and <span class="math inline">\(j = 1, \ldots, p\)</span>, and let <span class="math inline">\(z_{ij}\)</span> denote its value on the centered log-ratio (CLR) scale. Let <span class="math inline">\(\mathbf{x}_i\)</span> denote the covariate vector of sample <span class="math inline">\(i\)</span>. MetVAE assumes the left-censored normal model</p>
+<p><span class="math display">\[
+z_{ij} = \mu_j + \mathbf{x}_i^\top \boldsymbol{\gamma}_j + \sigma_j \varepsilon_{ij}, \qquad \varepsilon_{ij} \sim N(0, 1),
+\]</span></p>
+<p>in which a zero is recorded when the abundance falls below the detection limit. The parameters <span class="math inline">\(\mu_j\)</span>, <span class="math inline">\(\boldsymbol{\gamma}_j\)</span>, and <span class="math inline">\(\sigma_j\)</span> are estimated under censoring, and the covariate effects are removed. A variational autoencoder trained on the adjusted data imputes the censored values <span class="math inline">\(M\)</span> times. For imputation <span class="math inline">\(s\)</span>, let <span class="math inline">\(\tilde{z}^{(s)}_{ij}\)</span> denote the completed adjusted data. The correlation of metabolites <span class="math inline">\(j\)</span> and <span class="math inline">\(k\)</span> is estimated from the variance of their log ratio,</p>
+<p><span class="math display">\[
+\hat{r}^{(s)}_{jk} = \frac{\widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot j}\big) + \widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot k}\big) - \widehat{\mathrm{Var}}\big(\tilde{z}^{(s)}_{\cdot j} - \tilde{z}^{(s)}_{\cdot k}\big)}{2 \, \widehat{\mathrm{SD}}\big(\tilde{z}^{(s)}_{\cdot j}\big) \, \widehat{\mathrm{SD}}\big(\tilde{z}^{(s)}_{\cdot k}\big)},
+\]</span></p>
+<p>and the estimate <span class="math inline">\(\hat{r}_{jk}\)</span> is the mean of <span class="math inline">\(\hat{r}^{(s)}_{jk}\)</span> over the <span class="math inline">\(M\)</span> imputations, after entries with <span class="math inline">\(|\hat{r}^{(s)}_{jk}|\)</span> below a threshold are set to zero.</p>
+<p>Two procedures produce a sparse network. The first tests <span class="math inline">\(H_0: r_{jk} = 0\)</span> with</p>
+<p><span class="math display">\[
+T_{jk} = \operatorname{atanh}(\hat{r}_{jk}) \sqrt{n - 3}
+\]</span></p>
+<p>and retains the pairs whose adjusted <em>p</em>-value is below a cutoff. The second, SEC (Cui, Leng and Sun, 2016), solves</p>
+<p><span class="math display">\[
+\hat{\mathbf{R}} = \operatorname*{arg\,min}_{\mathbf{R}} \; \tfrac{1}{2} \lVert \mathbf{R} - \hat{\mathbf{R}}_0 \rVert_F^2 + \rho \sum_{j \ne k} \frac{|R_{jk}|}{|\hat{r}_{jk}|}
+\quad \text{subject to} \quad \lambda_{\min}(\mathbf{R}) \ge \epsilon,
+\]</span></p>
+<p>where <span class="math inline">\(\hat{\mathbf{R}}_0\)</span> is the matrix of the estimates <span class="math inline">\(\hat{r}_{jk}\)</span>, and the penalty <span class="math inline">\(\rho\)</span> is selected by cross-validation.</p>
+</section>
+<section id="data" class="level4">
+<h4 class="anchored" data-anchor-id="data">Data</h4>
+<p>The metabolomics table has one row per sample and one column per LC-MS feature. The tutorial retains the features with a compound name. Features with the same HMDB identifier, or without one and with names that differ only by a trailing asterisk, are treated as one compound, and for each compound the feature with the smallest proportion of zeros is retained.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MetVAE)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(igraph)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://raw.githubusercontent.com/borenstein-lab/"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"microbiome-metabolome-curated-data/main/data/processed_data/"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">"FRANZOSA_IBD_2019/"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"metadata.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>fmap <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"mtb.map.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>mtb  <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"mtb.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>mtb  <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(mtb)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Features with a compound name; one feature per compound.</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>named <span class="ot">&lt;-</span> fmap <span class="sc">|&gt;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Compound.Name), Compound <span class="sc">%in%</span> <span class="fu">colnames</span>(mtb)) <span class="sc">|&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">str_remove</span>(Compound.Name, <span class="st">"[*]+$"</span>),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">key  =</span> <span class="fu">coalesce</span>(HMDB, name),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">zero =</span> <span class="fu">colMeans</span>(mtb[, Compound] <span class="sc">==</span> <span class="dv">0</span>),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">med  =</span> <span class="fu">apply</span>(mtb[, Compound], <span class="dv">2</span>, median)) <span class="sc">|&gt;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(key, zero, <span class="fu">desc</span>(med)) <span class="sc">|&gt;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(key, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(name, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> mtb[, named<span class="sc">$</span>Compound]</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(y) <span class="ot">&lt;-</span> named<span class="sc">$</span>name</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 220 338</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> meta <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">diagnosis =</span> <span class="fu">factor</span>(Study.Group, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"CD"</span>, <span class="st">"UC"</span>)),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">cohort    =</span> <span class="fu">factor</span>(<span class="fu">if_else</span>(<span class="fu">str_starts</span>(Sample, <span class="st">"PRISM"</span>), <span class="st">"PRISM"</span>, <span class="st">"Validation"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">"Sample"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">Diagnosis =</span> meta<span class="sc">$</span>diagnosis, <span class="at">Cohort =</span> meta<span class="sc">$</span>cohort)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;          Cohort
+#&gt; Diagnosis PRISM Validation
+#&gt;   Control    34         22
+#&gt;   CD         68         20
+#&gt;   UC         53         23</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">zero =</span> <span class="fu">colMeans</span>(y <span class="sc">==</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> zero)) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.025</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> <span class="st">"grey70"</span>, <span class="at">color =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.3</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Proportion of zeros"</span>, <span class="at">y =</span> <span class="st">"Number of metabolites"</span>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-zeros" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-zeros-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="metvae_files/figure-html/fig-zeros-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-zeros-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Proportion of zeros of each metabolite. Metabolites to the right of the dashed line are removed by the default filter of metvae().
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="fitting-the-model" class="level4">
+<h4 class="anchored" data-anchor-id="fitting-the-model">Fitting the model</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">metvae</span>(y, <span class="at">meta =</span> meta[, <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"diagnosis"</span>, <span class="st">"cohort"</span>)],</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">continuous_covariate_keys =</span> <span class="st">"Age"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">categorical_covariate_keys =</span> <span class="fu">c</span>(<span class="st">"diagnosis"</span>, <span class="st">"cohort"</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">feature_zero_threshold =</span> <span class="fl">0.3</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">seed =</span> <span class="dv">1</span>L)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>meta</code></td>
+<td>Sample metadata, with the sample names as row names.</td>
+</tr>
+<tr class="even">
+<td><code>continuous_covariate_keys</code></td>
+<td>Numeric covariates; they are centered and scaled.</td>
+</tr>
+<tr class="odd">
+<td><code>categorical_covariate_keys</code></td>
+<td>Categorical covariates, coded by indicators with the first level as reference.</td>
+</tr>
+<tr class="even">
+<td><code>feature_zero_threshold</code></td>
+<td>Metabolites with a larger proportion of zeros are removed.</td>
+</tr>
+<tr class="odd">
+<td><code>seed</code></td>
+<td>Seed of the initialization, the batch order, and the imputations.</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">epoch =</span> <span class="fu">seq_along</span>(fit<span class="sc">$</span>train_loss), <span class="at">loss =</span> fit<span class="sc">$</span>train_loss) <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> epoch, <span class="at">y =</span> loss)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Epoch"</span>, <span class="at">y =</span> <span class="st">"Loss"</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-loss" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="metvae_files/figure-html/fig-loss-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Training loss of the variational autoencoder by epoch.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="correlation-estimate" class="level4">
+<h4 class="anchored" data-anchor-id="correlation-estimate">Correlation estimate</h4>
+<p><code>get_corr()</code> imputes the zeros <code>num_sim</code> times and averages the correlation matrices of the completed data sets.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">get_corr</span>(fit, <span class="at">num_sim =</span> <span class="dv">100</span>L, <span class="at">threshold =</span> <span class="fl">0.2</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">length</span>(fit<span class="sc">$</span>feature_names)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>p</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 291</code></pre>
+</div>
+</div>
+<p>The analysis retains 291 of the 338 metabolites, which give 42,195 pairs.</p>
+</section>
+<section id="sparse-networks" class="level4">
+<h4 class="anchored" data-anchor-id="sparse-networks">Sparse networks</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res_p   <span class="ot">&lt;-</span> <span class="fu">sparse_by_p</span>(fit, <span class="at">p_adj_method =</span> <span class="st">"fdr_bh"</span>, <span class="at">cutoff =</span> <span class="fl">0.05</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res_sec <span class="ot">&lt;-</span> <span class="fu">sparse_by_sec</span>(fit, <span class="at">c_grid =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">8</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">refine =</span> <span class="cn">FALSE</span>, <span class="at">seed =</span> <span class="dv">1</span>L)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>n_edges <span class="ot">&lt;-</span> <span class="cf">function</span>(m) (Matrix<span class="sc">::</span><span class="fu">nnzero</span>(m) <span class="sc">-</span> <span class="fu">nrow</span>(m)) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">fdr =</span> <span class="fu">n_edges</span>(res_p<span class="sc">$</span>sparse_estimate), <span class="at">sec =</span> <span class="fu">n_edges</span>(res_sec<span class="sc">$</span>sparse_estimate))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;   fdr   sec 
+#&gt; 12990  8895</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>res_sec<span class="sc">$</span>scores_by_rho <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> rho, <span class="at">y =</span> score)) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> res_sec<span class="sc">$</span>best_rho, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>() <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(rho <span class="sc">~</span> <span class="st">"(log scale)"</span>), <span class="at">y =</span> <span class="st">"Validation error"</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-cv" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="metvae_files/figure-html/fig-cv-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Cross-validation error of SEC by penalty. The dashed line marks the selected penalty.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The grid of the penalty is <span class="math inline">\(\rho = c \sqrt{\log p / n}\)</span> for the listed values of <span class="math inline">\(c\)</span>. The validation error decreases as <span class="math inline">\(\rho\)</span> decreases over the whole grid, and cross-validation selects the smallest value, <span class="math inline">\(\rho =\)</span> 0.00803. In these data the penalty therefore shrinks the estimate little, and the zeros of the SEC estimate arise mainly from the thresholds of <code>get_corr()</code> (0.2) and <code>sparse_by_sec()</code> (0.1).</p>
+</section>
+<section id="results" class="level4">
+<h4 class="anchored" data-anchor-id="results">Results</h4>
+<p>The pairs retained by SEC, with the strongest correlations first:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>class_of <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">coalesce</span>(named<span class="sc">$</span>Putative.Chemical.Class, <span class="st">"Not assigned"</span>), named<span class="sc">$</span>name)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>edges <span class="ot">&lt;-</span> Matrix<span class="sc">::</span><span class="fu">summary</span>(res_sec<span class="sc">$</span>sparse_estimate) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(i <span class="sc">&lt;</span> j) <span class="sc">|&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">metabolite_1 =</span> fit<span class="sc">$</span>feature_names[i],</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">metabolite_2 =</span> fit<span class="sc">$</span>feature_names[j],</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">r =</span> x,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">class_1 =</span> class_of[metabolite_1],</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">class_2 =</span> class_of[metabolite_2]) <span class="sc">|&gt;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(r)))</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(edges, <span class="dv">15</span>), <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">caption =</span> <span class="st">"Metabolite pairs with the largest absolute SEC correlation."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Metabolite pairs with the largest absolute SEC correlation.</caption>
+<colgroup>
+<col style="width: 10%">
+<col style="width: 26%">
+<col style="width: 4%">
+<col style="width: 29%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">metabolite_1</th>
+<th style="text-align: left;">metabolite_2</th>
+<th style="text-align: right;">r</th>
+<th style="text-align: left;">class_1</th>
+<th style="text-align: left;">class_2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">guanosine</td>
+<td style="text-align: left;">8-hydroxy-deoxyguanosine</td>
+<td style="text-align: right;">0.94</td>
+<td style="text-align: left;">Purine nucleosides</td>
+<td style="text-align: left;">Purine nucleosides</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">leucine</td>
+<td style="text-align: left;">valine</td>
+<td style="text-align: right;">0.94</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C52:3 TAG</td>
+<td style="text-align: left;">C54:4 TAG</td>
+<td style="text-align: right;">0.94</td>
+<td style="text-align: left;">Triacylglycerols</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">alanine</td>
+<td style="text-align: left;">leucine</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">alanine</td>
+<td style="text-align: left;">valine</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C22:1 MAG</td>
+<td style="text-align: left;">7-hexadecenoic acid methyl ester</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: left;">1-monoacylglycerols</td>
+<td style="text-align: left;">Fatty acid methyl esters</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C53:3 TAG</td>
+<td style="text-align: left;">C56:4 TAG</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">uridine</td>
+<td style="text-align: left;">8-hydroxy-deoxyguanosine</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Purine nucleosides</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C52:2 TAG</td>
+<td style="text-align: left;">C54:4 TAG</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C53:3 TAG</td>
+<td style="text-align: left;">C54:2 TAG</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C52:2 TAG</td>
+<td style="text-align: left;">C52:3 TAG</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Triacylglycerols</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">threonine</td>
+<td style="text-align: left;">valine</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">L-alpha-amino acids</td>
+<td style="text-align: left;">Amino acids, peptides, and analogues</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">guanosine</td>
+<td style="text-align: left;">uridine</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Purine nucleosides</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C54:2 TAG</td>
+<td style="text-align: left;">C56:4 TAG</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C52:4 TAG</td>
+<td style="text-align: left;">C54:5 TAG</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Not assigned</td>
+<td style="text-align: left;">Not assigned</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>both <span class="ot">&lt;-</span> edges <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">fdr =</span> <span class="fu">as.matrix</span>(res_p<span class="sc">$</span>sparse_estimate)[<span class="fu">cbind</span>(metabolite_1, metabolite_2)] <span class="sc">!=</span> <span class="dv">0</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(both<span class="sc">$</span>fdr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 0.9718943</code></pre>
+</div>
+</div>
+<p>Of the pairs retained by SEC, a proportion of 0.97 are also retained by the Fisher <em>z</em>-tests at a false discovery rate of 0.05.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>strong <span class="ot">&lt;-</span> <span class="fu">filter</span>(edges, <span class="fu">abs</span>(r) <span class="sc">&gt;=</span> <span class="fl">0.7</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">graph_from_data_frame</span>(strong[, <span class="fu">c</span>(<span class="st">"metabolite_1"</span>, <span class="st">"metabolite_2"</span>, <span class="st">"r"</span>)], <span class="at">directed =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>top_class <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(<span class="fu">sort</span>(<span class="fu">table</span>(class_of[<span class="fu">V</span>(g)<span class="sc">$</span>name]), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)), <span class="st">"Not assigned"</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>palette   <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">c</span>(<span class="st">"#a63d2f"</span>, <span class="st">"#476e61"</span>, <span class="st">"#a47b36"</span>, <span class="st">"#625d78"</span>, <span class="st">"#466675"</span>, <span class="st">"#c26743"</span>), top_class)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">V</span>(g)<span class="sc">$</span>color <span class="ot">&lt;-</span> <span class="fu">coalesce</span>(palette[class_of[<span class="fu">V</span>(g)<span class="sc">$</span>name]], <span class="st">"grey80"</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Label the metabolite with the most pairs in each cluster of at least five metabolites.</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>comp <span class="ot">&lt;-</span> <span class="fu">components</span>(g)<span class="sc">$</span>membership</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>hub  <span class="ot">&lt;-</span> <span class="fu">tapply</span>(<span class="fu">seq_len</span>(<span class="fu">vcount</span>(g)), comp, <span class="cf">function</span>(v) v[<span class="fu">which.max</span>(<span class="fu">degree</span>(g)[v])])</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>big  <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">names</span>(<span class="fu">which</span>(<span class="fu">table</span>(comp) <span class="sc">&gt;=</span> <span class="dv">5</span>)))</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">V</span>(g)<span class="sc">$</span>label <span class="ot">&lt;-</span> <span class="cn">NA_character_</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">V</span>(g)<span class="sc">$</span>label[hub[<span class="fu">as.character</span>(big)]] <span class="ot">&lt;-</span> <span class="fu">V</span>(g)<span class="sc">$</span>name[hub[<span class="fu">as.character</span>(big)]]</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(g, <span class="at">layout =</span> <span class="fu">layout_with_fr</span>(g), <span class="at">vertex.size =</span> <span class="dv">4</span>, <span class="at">vertex.frame.color =</span> <span class="st">"grey30"</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">vertex.label.cex =</span> <span class="fl">0.7</span>, <span class="at">vertex.label.color =</span> <span class="st">"black"</span>, <span class="at">vertex.label.dist =</span> <span class="fl">1.2</span>,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">edge.lty =</span> <span class="fu">if_else</span>(<span class="fu">E</span>(g)<span class="sc">$</span>r <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="at">edge.color =</span> <span class="st">"grey55"</span>,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">edge.width =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">abs</span>(<span class="fu">E</span>(g)<span class="sc">$</span>r))</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomleft"</span>, <span class="at">legend =</span> top_class, <span class="at">fill =</span> palette, <span class="at">bty =</span> <span class="st">"n"</span>, <span class="at">cex =</span> <span class="fl">0.7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-network" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-network-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="metvae_files/figure-html/fig-network-1.png" class="img-fluid figure-img" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-network-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Pairs with an absolute SEC correlation of at least 0.7. Node color is the putative chemical class; gray nodes belong to other classes. Solid edges are positive and dashed edges negative correlations.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The network has 163 metabolites and 778 pairs with an absolute correlation of at least 0.7. In each connected cluster of at least five metabolites, the metabolite with the most pairs is labeled.</p>
+</section>
+<section id="export" class="level4">
+<h4 class="anchored" data-anchor-id="export">Export</h4>
+<p><code>export_graphml()</code> returns one <code>igraph</code> network per cutoff of the absolute correlation and writes each as a GraphML file, which Cytoscape reads.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>networks <span class="ot">&lt;-</span> <span class="fu">export_graphml</span>(res_sec, <span class="at">cutoffs =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.7</span>), <span class="at">output_dir =</span> <span class="st">"networks"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="session-information" class="level4">
+<h4 class="anchored" data-anchor-id="session-information">Session information</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; R version 4.6.2 (2026-10-29)
+#&gt; Platform: aarch64-apple-darwin23
+#&gt; Running under: macOS Sequoia 15.8.3
+#&gt; 
+#&gt; Matrix products: default
+#&gt; BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+#&gt; LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+#&gt; 
+#&gt; locale:
+#&gt; [1] en_US/C.UTF-8/en_US/C/en_US/en_US
+#&gt; 
+#&gt; time zone: America/New_York
+#&gt; tzcode source: internal
+#&gt; 
+#&gt; attached base packages:
+#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     
+#&gt; 
+#&gt; other attached packages:
+#&gt;  [1] igraph_2.3.4    lubridate_1.9.5 forcats_1.0.1   stringr_1.6.0  
+#&gt;  [5] dplyr_1.2.1     purrr_1.2.2     readr_2.2.0     tidyr_1.3.2    
+#&gt;  [9] tibble_3.3.1    ggplot2_4.0.4   tidyverse_2.0.0 MetVAE_0.99.0  
+#&gt; 
+#&gt; loaded via a namespace (and not attached):
+#&gt;  [1] generics_0.1.4     stringi_1.8.9      lattice_0.23-1     hms_1.1.4         
+#&gt;  [5] digest_0.6.39      magrittr_2.0.5     evaluate_1.0.5     grid_4.6.2        
+#&gt;  [9] timechange_0.4.0   RColorBrewer_1.1-3 fastmap_1.2.0      jsonlite_2.0.0    
+#&gt; [13] Matrix_1.7-6       processx_3.10.0    torch_0.17.0       scales_1.4.0      
+#&gt; [17] coro_1.1.0         cli_3.6.6          rlang_1.3.0        bit64_4.8.6       
+#&gt; [21] withr_3.0.3        yaml_2.3.12        otel_0.3.0         tools_4.6.2       
+#&gt; [25] tzdb_0.5.0         vctrs_0.7.3        R6_2.6.1           lifecycle_1.0.5   
+#&gt; [29] htmlwidgets_1.6.4  bit_4.6.0          pkgconfig_2.0.3    callr_3.8.0       
+#&gt; [33] pillar_1.11.1      gtable_0.3.6       glue_1.8.1         Rcpp_1.1.2        
+#&gt; [37] xfun_0.62          tidyselect_1.2.1   knitr_1.52         farver_2.1.2      
+#&gt; [41] htmltools_0.5.9    rmarkdown_2.32     labeling_0.4.3     compiler_4.6.2    
+#&gt; [45] S7_1.0.0</code></pre>
+</div>
+</div>
+</section>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<p>The code in this tab is shown for reference and is not executed on this page. It applies the same analysis to the same data.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install metvae</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> metvae.model <span class="im">import</span> MetVAE</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> (<span class="st">"https://raw.githubusercontent.com/borenstein-lab/"</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>       <span class="st">"microbiome-metabolome-curated-data/main/data/processed_data/"</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>       <span class="st">"FRANZOSA_IBD_2019/"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>meta <span class="op">=</span> pd.read_csv(url <span class="op">+</span> <span class="st">"metadata.tsv"</span>, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, index_col<span class="op">=</span><span class="st">"Sample"</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>fmap <span class="op">=</span> pd.read_csv(url <span class="op">+</span> <span class="st">"mtb.map.tsv"</span>, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>mtb <span class="op">=</span> pd.read_csv(url <span class="op">+</span> <span class="st">"mtb.tsv"</span>, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, index_col<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Features with a compound name; one feature per compound.</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>named <span class="op">=</span> fmap[fmap[<span class="st">"Compound.Name"</span>].notna() <span class="op">&amp;</span> fmap[<span class="st">"Compound"</span>].isin(mtb.columns)].copy()</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>named[<span class="st">"name"</span>] <span class="op">=</span> named[<span class="st">"Compound.Name"</span>].<span class="bu">str</span>.replace(<span class="vs">r"</span><span class="ch">\*</span><span class="op">+</span><span class="dv">$</span><span class="vs">"</span>, <span class="st">""</span>, regex<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>named[<span class="st">"key"</span>] <span class="op">=</span> named[<span class="st">"HMDB"</span>].fillna(named[<span class="st">"name"</span>])</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>named[<span class="st">"zero"</span>] <span class="op">=</span> (mtb[named[<span class="st">"Compound"</span>]] <span class="op">==</span> <span class="dv">0</span>).mean().values</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>named <span class="op">=</span> (named.sort_values([<span class="st">"key"</span>, <span class="st">"zero"</span>]).drop_duplicates(<span class="st">"key"</span>)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>              .drop_duplicates(<span class="st">"name"</span>))</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> mtb[named[<span class="st">"Compound"</span>]]</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>y.columns <span class="op">=</span> named[<span class="st">"name"</span>]</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>meta[<span class="st">"diagnosis"</span>] <span class="op">=</span> pd.Categorical(meta[<span class="st">"Study.Group"</span>], [<span class="st">"Control"</span>, <span class="st">"CD"</span>, <span class="st">"UC"</span>])</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>meta[<span class="st">"cohort"</span>] <span class="op">=</span> [<span class="st">"PRISM"</span> <span class="cf">if</span> s.startswith(<span class="st">"PRISM"</span>) <span class="cf">else</span> <span class="st">"Validation"</span> <span class="cf">for</span> s <span class="kw">in</span> meta.index]</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MetVAE(data<span class="op">=</span>y, meta<span class="op">=</span>meta[[<span class="st">"Age"</span>, <span class="st">"diagnosis"</span>, <span class="st">"cohort"</span>]],</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>               continuous_covariate_keys<span class="op">=</span>[<span class="st">"Age"</span>],</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>               categorical_covariate_keys<span class="op">=</span>[<span class="st">"diagnosis"</span>, <span class="st">"cohort"</span>])</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>model.train()</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>model.get_corr()</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>results_p <span class="op">=</span> model.sparse_by_p()</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>results_sec <span class="op">=</span> model.sparse_by_sec()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The arguments and the structure of the results are described in the <a href="https://github.com/MATRIX-Research-Lab/MetVAE-PyPI">package README</a>, and the <a href="https://github.com/MATRIX-Research-Lab/MetVAE-PyPI/tree/main/notebooks">example notebooks</a> include an analysis of a hepatocellular carcinoma data set with 7,217 metabolites.</p>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<p>GNPS_Local runs GNPS feature-based molecular networking on a local computer and provides MetVAE through a graphical interface. Installation and use are described in the <a href="https://some-earth-2514.github.io/GNPS_Local_Documentation/">GNPS_Local documentation</a>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data sources</h2>
+<p>Franzosa EA, Sirota-Madi A, Avila-Pacheco J, et al.&nbsp;Gut microbiome structure and metabolic activity in inflammatory bowel disease. <em>Nature Microbiology</em> 4:293–305 (2019). <a href="https://doi.org/10.1038/s41564-018-0306-4">doi:10.1038/s41564-018-0306-4</a></p>
+<p>Muller E, Algavi YM, Borenstein E. The gut microbiome-metabolome dataset collection: a curated resource for integrative meta-analysis. <em>npj Biofilms and Microbiomes</em> 8:79 (2022). <a href="https://doi.org/10.1038/s41522-022-00345-5">doi:10.1038/s41522-022-00345-5</a></p>
 </section>
 <section id="citation" class="level2">
 <h2 class="anchored" data-anchor-id="citation">Citation</h2>
@@ -240,6 +783,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="related-methods">Related methods</h2>
 <ul>
 <li><a href="../tools/secom.html">SECOM</a>: correlation between taxa in microbiome data.</li>
+<li><a href="../tools/triger.html">TriGer</a>: modules of features associated across two omics layers.</li>
 </ul>
 
 

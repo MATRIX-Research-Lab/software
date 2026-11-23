@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://matrix-research-lab.github.io/software/tutorials/index.html</loc>
-    <lastmod>2026-11-16T03:10:49.681Z</lastmod>
+    <lastmod>2026-11-23T22:42:55.959Z</lastmod>
   </url>
   <url>
     <loc>https://matrix-research-lab.github.io/software/tools/amma.html</loc>
@@ -21,8 +21,12 @@
     <lastmod>2026-11-16T17:08:19.750Z</lastmod>
   </url>
   <url>
+    <loc>https://matrix-research-lab.github.io/software/tools/triger.html</loc>
+    <lastmod>2026-11-23T22:49:14.103Z</lastmod>
+  </url>
+  <url>
     <loc>https://matrix-research-lab.github.io/software/community.html</loc>
-    <lastmod>2026-11-16T02:48:05.277Z</lastmod>
+    <lastmod>2026-11-23T22:14:28.473Z</lastmod>
   </url>
   <url>
     <loc>https://matrix-research-lab.github.io/software/tools/ancombc.html</loc>
@@ -30,11 +34,11 @@
   </url>
   <url>
     <loc>https://matrix-research-lab.github.io/software/tools/diagmi.html</loc>
-    <lastmod>2026-11-16T02:48:05.261Z</lastmod>
+    <lastmod>2026-11-23T22:14:28.473Z</lastmod>
   </url>
   <url>
     <loc>https://matrix-research-lab.github.io/software/tools/metvae.html</loc>
-    <lastmod>2026-11-16T02:48:05.256Z</lastmod>
+    <lastmod>2026-11-23T22:52:27.321Z</lastmod>
   </url>
   <url>
     <loc>https://matrix-research-lab.github.io/software/tools/ancombc2.html</loc>

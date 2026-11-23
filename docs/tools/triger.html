@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Modules of features that are densely associated across two omics layers and coherent within each layer, detected with a triple-graph model.">
+
+<title>TriGer – Open-Source Software</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ba76710c152a9e70589c0ebadcc5f94a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-e685adfa9bcbe4206b0089c43b4eb21f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Open-Source Software</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../tools/index.html"> 
+<span class="menu-text">Tools</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../tutorials/index.html"> 
+<span class="menu-text">Tutorials</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../community.html"> 
+<span class="menu-text">Community</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://matrix-research-lab.github.io/"> 
+<span class="menu-text">MATRIX Lab</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+            <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#platforms" id="toc-platforms" class="nav-link active" data-scroll-target="#platforms">Platforms</a></li>
+  <li><a href="#extended-tutorial" id="toc-extended-tutorial" class="nav-link" data-scroll-target="#extended-tutorial">Extended tutorial</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data sources</a></li>
+  <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
+  <li><a href="#related-methods" id="toc-related-methods" class="nav-link" data-scroll-target="#related-methods">Related methods</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TriGer</h1>
+</div>
+
+<div>
+  <div class="description">
+    Modules of features that are densely associated across two omics layers and coherent within each layer, detected with a triple-graph model.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="method-meta">
+<p><span class="area">Multi-omics integration</span> <span class="status released">released</span> <span class="badge-p">R</span> <span class="badge-p">Python</span> <span class="badge-p">MATLAB</span></p>
+</div>
+<p>TriGer (triple-graph model) detects modules of features from two omics layers <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. It uses three association matrices: the cross-omics matrix between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, and the within-omics correlation matrices of <span class="math inline">\(X\)</span> and of <span class="math inline">\(Y\)</span>. Dense blocks are first extracted from the cross-omics matrix by greedy peeling, and large blocks are then refined with the within-omics matrices. Each module is therefore densely associated across the two layers and coherent within each layer. The parameter <code>lambda1</code> is the size penalty of the cross-omics step, and <code>lambda2</code> and <code>lambda3</code> are the within-omics penalties for <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>; larger values give smaller, denser modules.</p>
+<section id="platforms" class="level2">
+<h2 class="anchored" data-anchor-id="platforms">Platforms</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Platform</th>
+<th>Package</th>
+<th>Install</th>
+<th>Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R</td>
+<td>TriGer</td>
+<td><code>remotes::install_github("MATRIX-Research-Lab/TriGer")</code></td>
+<td><a href="https://github.com/MATRIX-Research-Lab/TriGer">GitHub</a> · <code>vignette("TriGer")</code></td>
+</tr>
+<tr class="even">
+<td>Python</td>
+<td>triger (PyPI)</td>
+<td><code>pip install triger</code></td>
+<td><a href="https://pypi.org/project/triger/">PyPI</a> · <a href="https://github.com/MATRIX-Research-Lab/TriGer-PyPI">GitHub</a></td>
+</tr>
+<tr class="odd">
+<td>MATLAB</td>
+<td>TriGer functions</td>
+<td>Clone the repository; add <code>matlab/methods</code> and <code>matlab/visualization</code> to the path</td>
+<td><a href="https://github.com/jy2941/TriGer">GitHub</a></td>
+</tr>
+</tbody>
+</table>
+<p>The R package is installed from GitHub; its Bioconductor submission is under review. The R and Python packages give identical results on the same input. The MATLAB repository also contains the code for the simulations and real-data analyses of the paper.</p>
+</section>
+<section id="extended-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="extended-tutorial">Extended tutorial</h2>
+<p>The R tutorial detects modules of gut bacterial genera and stool metabolites in the PRISM and validation cohorts of Franzosa et al.&nbsp;(2019), which include patients with Crohn’s disease (CD), patients with ulcerative colitis (UC), and controls. The data are the processed metagenomic and metabolomic tables of the curated microbiome–metabolome collection of Muller et al.&nbsp;(2022). The modules are detected from all samples, and the strength of each module is then compared between the diagnosis groups.</p>
+<p>Select a platform.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="platform">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">MATLAB</a></li></ul>
+<div class="tab-content" data-group="platform">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<section id="model" class="level4">
+<h4 class="anchored" data-anchor-id="model">Model</h4>
+<p>Let <span class="math inline">\(\mathbf{X}\)</span> denote the <span class="math inline">\(n \times m\)</span> matrix of the first omics layer and <span class="math inline">\(\mathbf{Y}\)</span> the <span class="math inline">\(n \times q\)</span> matrix of the second, with the same <span class="math inline">\(n\)</span> samples in rows. Let <span class="math inline">\(\mathbf{Z} = [\mathbf{X} \mid \mathbf{Y}]\)</span> denote their combination, with <span class="math inline">\(m + q\)</span> columns. Let <span class="math inline">\(r_{ab}\)</span> denote the correlation of columns <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> of <span class="math inline">\(\mathbf{Z}\)</span>, and let <span class="math inline">\(p_{ab}\)</span> denote the <em>p</em>-value of the test of zero correlation. TriGer uses the <span class="math inline">\((m + q) \times (m + q)\)</span> matrices</p>
+<p><span class="math display">\[
+\mathbf{R} = (r_{ab})
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\mathbf{P} = (-\log_{10} p_{ab}).
+\]</span></p>
+<p>The cross-omics block of <span class="math inline">\(\mathbf{P}\)</span>, with rows <span class="math inline">\(1, \ldots, m\)</span> and columns <span class="math inline">\(m + 1, \ldots, m + q\)</span>, defines a weighted bipartite graph between the features of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. The within-omics blocks of <span class="math inline">\(\mathbf{R}\)</span> define one weighted graph for each layer; together with the bipartite graph they form the triple graph. In the first step, TriGer extracts dense blocks of the bipartite graph by greedy peeling, with size penalty <span class="math inline">\(\lambda_1\)</span>. In the second and third steps, the <span class="math inline">\(X\)</span> side and the <span class="math inline">\(Y\)</span> side of each block that exceeds a maximum size are divided into dense communities of the corresponding within-omics graph, with size penalties <span class="math inline">\(\lambda_2\)</span> and <span class="math inline">\(\lambda_3\)</span>. A module is a resulting set of <span class="math inline">\(X\)</span> features and <span class="math inline">\(Y\)</span> features.</p>
+</section>
+<section id="data" class="level4">
+<h4 class="anchored" data-anchor-id="data">Data</h4>
+<p>The <span class="math inline">\(X\)</span> layer consists of the bacterial genera with a prevalence of at least 50% and a mean relative abundance of at least 0.2%, on the centered log-ratio (CLR) scale. The <span class="math inline">\(Y\)</span> layer consists of the named metabolites with at most 30% zeros, on the log scale; features with the same HMDB identifier, or without one and with names that differ only by a trailing asterisk, are treated as one compound. In both layers, zeros are replaced by half of the smallest positive value of the feature.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TriGer)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://raw.githubusercontent.com/borenstein-lab/"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"microbiome-metabolome-curated-data/main/data/processed_data/"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"FRANZOSA_IBD_2019/"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"metadata.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>fmap <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"mtb.map.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>mtb  <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"mtb.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>, <span class="at">row.names =</span> <span class="dv">1</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>gen  <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">read.delim</span>(<span class="fu">paste0</span>(url, <span class="st">"genera.tsv"</span>), <span class="at">check.names =</span> <span class="cn">FALSE</span>, <span class="at">row.names =</span> <span class="dv">1</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">identical</span>(<span class="fu">rownames</span>(mtb), meta<span class="sc">$</span>Sample), <span class="fu">identical</span>(<span class="fu">rownames</span>(gen), meta<span class="sc">$</span>Sample))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>half_min <span class="ot">&lt;-</span> <span class="cf">function</span>(v) { v[v <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="fu">min</span>(v[v <span class="sc">&gt;</span> <span class="dv">0</span>]) <span class="sc">/</span> <span class="dv">2</span>; v }</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># X: genera, CLR over the retained genera.</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>gen <span class="ot">&lt;-</span> gen[, <span class="fu">colMeans</span>(gen <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">&gt;=</span> <span class="fl">0.5</span> <span class="sc">&amp;</span> <span class="fu">colMeans</span>(gen) <span class="sc">&gt;=</span> <span class="fl">0.002</span>]</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(gen) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">".*;g__"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(gen))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>log_gen <span class="ot">&lt;-</span> <span class="fu">log</span>(<span class="fu">apply</span>(gen, <span class="dv">2</span>, half_min))</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> log_gen <span class="sc">-</span> <span class="fu">rowMeans</span>(log_gen)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Y: named metabolites, one feature per compound, log scale.</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>named <span class="ot">&lt;-</span> fmap <span class="sc">|&gt;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Compound.Name), Compound <span class="sc">%in%</span> <span class="fu">colnames</span>(mtb)) <span class="sc">|&gt;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">str_remove</span>(Compound.Name, <span class="st">"[*]+$"</span>),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">key  =</span> <span class="fu">coalesce</span>(HMDB, name),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">zero =</span> <span class="fu">colMeans</span>(mtb[, Compound] <span class="sc">==</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(key, zero) <span class="sc">|&gt;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(key, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(name, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(zero <span class="sc">&lt;=</span> <span class="fl">0.3</span>)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">log</span>(<span class="fu">apply</span>(mtb[, named<span class="sc">$</span>Compound], <span class="dv">2</span>, half_min))</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(y) <span class="ot">&lt;-</span> named<span class="sc">$</span>name</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">samples =</span> <span class="fu">nrow</span>(x), <span class="at">genera =</span> <span class="fu">ncol</span>(x), <span class="at">metabolites =</span> <span class="fu">ncol</span>(y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;     samples      genera metabolites 
+#&gt;         220          73         291</code></pre>
+</div>
+</div>
+</section>
+<section id="analysis" class="level4">
+<h4 class="anchored" data-anchor-id="analysis">Analysis</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">triger</span>(x, y, <span class="at">method =</span> <span class="st">"spearman"</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">lambda1 =</span> <span class="fl">1.5</span>, <span class="at">lambda2 =</span> <span class="fl">1.8</span>, <span class="at">lambda3 =</span> <span class="fl">1.8</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">X_size =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">25</span>), <span class="at">Y_size =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">50</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(res<span class="sc">$</span>modules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 2</code></pre>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>method</code></td>
+<td>Correlation used for <span class="math inline">\(\mathbf{R}\)</span> and <span class="math inline">\(\mathbf{P}\)</span>: <code>"pearson"</code> or <code>"spearman"</code>.</td>
+</tr>
+<tr class="even">
+<td><code>lambda1</code></td>
+<td>Size penalty <span class="math inline">\(\lambda_1\)</span> of the cross-omics step; larger values give smaller, denser blocks.</td>
+</tr>
+<tr class="odd">
+<td><code>lambda2</code>, <code>lambda3</code></td>
+<td>Size penalties <span class="math inline">\(\lambda_2\)</span> and <span class="math inline">\(\lambda_3\)</span> of the within-omics steps for <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.</td>
+</tr>
+<tr class="even">
+<td><code>X_size</code>, <code>Y_size</code></td>
+<td><code>c(min, max)</code>: blocks with <code>min</code> or fewer features on a side are dropped, and sides with more than <code>max</code> features are refined.</td>
+</tr>
+<tr class="odd">
+<td><code>max_blocks</code></td>
+<td>Maximum number of blocks of the cross-omics step (default 5).</td>
+</tr>
+</tbody>
+</table>
+<p>The result contains the list <code>modules</code>, the matrices <code>R</code> and <code>P</code> over the <span class="math inline">\(m + q\)</span> features, and the numbers of features <code>m</code> and <code>n</code> of the two layers. Each module holds the column indices <code>X</code> and <code>Y</code>, the feature names <code>X_names</code> and <code>Y_names</code>, and the density of its block.</p>
+</section>
+<section id="modules" class="level4">
+<h4 class="anchored" data-anchor-id="modules">Modules</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>modules <span class="ot">&lt;-</span> <span class="fu">imap</span>(res<span class="sc">$</span>modules, <span class="cf">function</span>(b, k) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">module =</span> k, <span class="at">layer =</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="st">"genus"</span>, <span class="fu">length</span>(b<span class="sc">$</span>X)), <span class="fu">rep</span>(<span class="st">"metabolite"</span>, <span class="fu">length</span>(b<span class="sc">$</span>Y))),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">feature =</span> <span class="fu">c</span>(b<span class="sc">$</span>X_names, b<span class="sc">$</span>Y_names))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>()</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>modules <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">features =</span> <span class="fu">paste</span>(feature, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="at">.by =</span> <span class="fu">c</span>(module, layer)) <span class="sc">|&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Features of each module."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Features of each module.</caption>
+<colgroup>
+<col style="width: 1%">
+<col style="width: 1%">
+<col style="width: 97%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">module</th>
+<th style="text-align: left;">layer</th>
+<th style="text-align: left;">features</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">genus</td>
+<td style="text-align: left;">Faecousia, Veillonella, CAG-83, Faecalimonas, Ruminococcus_B, ER4, Enterocloster, Blautia, CAG-170, CAG-103</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">metabolite</td>
+<td style="text-align: left;">C18:0e MAG, C18:1 carnitine, C16 carnitine, ketodeoxycholate, alpha-muricholate, chenodeoxycholate, cholate, docosapentaenoate, N-acetylputrescine, palmitoylethanolamide, adrenic acid, eicosatrienoic acid, urobilin, C18:2 carnitine</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">genus</td>
+<td style="text-align: left;">Escherichia, Alistipes, Lactobacillus, Limosilactobacillus, Streptococcus, Evtepia, Enterococcus_B, Haemophilus_D, UBA1417, Klebsiella, Adlercreutzia</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">metabolite</td>
+<td style="text-align: left;">2-hydroxy-3-methylpentanoic acid / leucinic acid, ADMA/SDMA, C16:0 LPC, C16:0 ceramide (d18:1), C20:4 carnitine, creatine, guanine, thiamine, taurine, 2-methylglutaric acid, 3-methyladipate-pimelate, creatinine, erythronic acid, dodecanedioic acid, deoxycholic acid, lithocholic acid, hydrocinnamic acid, azelaic acid, sebacate, pentadecanoate, undecanedionate, suberate, cholestenone, 2-hydroxyphenethylamine, putrescine, pyridoxamine, ADMA, carnosol, diacetylspermine, 2-hydroxymyristic acid, phytosphingosine, linoleoyl ethanolamide, 2-hydroxyhexadecanoate, L-1,2,3,4-tetrahydro-beta-carboline-3-carboxylic acid, 4-hydroxy-3-methylacetophenone, cystine</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> res<span class="sc">$</span>m</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> res<span class="sc">$</span>n</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot3in1_v1</span>(res<span class="sc">$</span>R[<span class="dv">1</span><span class="sc">:</span>m, <span class="dv">1</span><span class="sc">:</span>m], res<span class="sc">$</span>R[m <span class="sc">+</span> <span class="dv">1</span><span class="sc">:</span>q, m <span class="sc">+</span> <span class="dv">1</span><span class="sc">:</span>q], res<span class="sc">$</span>R[<span class="dv">1</span><span class="sc">:</span>m, m <span class="sc">+</span> <span class="dv">1</span><span class="sc">:</span>q],</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            res<span class="sc">$</span>modules, <span class="at">line =</span> <span class="cn">TRUE</span>, <span class="at">step =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">50</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-three" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="triger_files/figure-html/fig-three-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Correlation matrices of the module features. The square is the cross-omics matrix of genera (columns) and metabolites (rows); the triangles are the within-omics matrices of the genera (top) and of the metabolites (right). Red boxes mark the modules.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> res<span class="sc">$</span>modules[[<span class="dv">1</span>]]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(x[, b<span class="sc">$</span>X_names], y[, b<span class="sc">$</span>Y_names], <span class="at">method =</span> <span class="st">"spearman"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>(<span class="at">rownames =</span> <span class="st">"genus"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>genus, <span class="at">names_to =</span> <span class="st">"metabolite"</span>, <span class="at">values_to =</span> <span class="st">"r"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> genus, <span class="at">y =</span> metabolite, <span class="at">fill =</span> r)) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> <span class="st">"#466675"</span>, <span class="at">mid =</span> <span class="st">"white"</span>, <span class="at">high =</span> <span class="st">"#a63d2f"</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="st">"Spearman r"</span>) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-module1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-module1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="triger_files/figure-html/fig-module1-1.png" class="img-fluid figure-img" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-module1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Spearman correlations between the genera and the metabolites of module 1, from all samples.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="modules-by-diagnosis" class="level4">
+<h4 class="anchored" data-anchor-id="modules-by-diagnosis">Modules by diagnosis</h4>
+<p>The modules are detected from all samples, so their associations can include differences between the diagnosis groups. The mean absolute Spearman correlation of the genus–metabolite pairs of each module, computed within each group, describes the association within the groups.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>by_group <span class="ot">&lt;-</span> <span class="fu">expand_grid</span>(<span class="at">module =</span> <span class="fu">seq_along</span>(res<span class="sc">$</span>modules),</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">diagnosis =</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"CD"</span>, <span class="st">"UC"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n =</span> <span class="fu">map_int</span>(diagnosis, \(g) <span class="fu">sum</span>(meta<span class="sc">$</span>Study.Group <span class="sc">==</span> g)),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">mean_abs_r =</span> <span class="fu">map2_dbl</span>(module, diagnosis, <span class="cf">function</span>(k, g) {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>           s <span class="ot">&lt;-</span> meta<span class="sc">$</span>Study.Group <span class="sc">==</span> g</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>           b <span class="ot">&lt;-</span> res<span class="sc">$</span>modules[[k]]</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>           <span class="fu">mean</span>(<span class="fu">abs</span>(<span class="fu">cor</span>(x[s, b<span class="sc">$</span>X_names], y[s, b<span class="sc">$</span>Y_names], <span class="at">method =</span> <span class="st">"spearman"</span>)))</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>         }))</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>by_group <span class="sc">|&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> module, <span class="at">names_from =</span> diagnosis, <span class="at">values_from =</span> mean_abs_r) <span class="sc">|&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">caption =</span> <span class="st">"Mean absolute genus-metabolite Spearman correlation of each module, by diagnosis."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Mean absolute genus-metabolite Spearman correlation of each module, by diagnosis.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">module</th>
+<th style="text-align: right;">Control</th>
+<th style="text-align: right;">CD</th>
+<th style="text-align: right;">UC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">0.49</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">0.34</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="session-information" class="level4">
+<h4 class="anchored" data-anchor-id="session-information">Session information</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; R version 4.6.2 (2026-10-29)
+#&gt; Platform: aarch64-apple-darwin23
+#&gt; Running under: macOS Sequoia 15.8.3
+#&gt; 
+#&gt; Matrix products: default
+#&gt; BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+#&gt; LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+#&gt; 
+#&gt; locale:
+#&gt; [1] en_US/C.UTF-8/en_US/C/en_US/en_US
+#&gt; 
+#&gt; time zone: America/New_York
+#&gt; tzcode source: internal
+#&gt; 
+#&gt; attached base packages:
+#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     
+#&gt; 
+#&gt; other attached packages:
+#&gt;  [1] lubridate_1.9.5 forcats_1.0.1   stringr_1.6.0   dplyr_1.2.1    
+#&gt;  [5] purrr_1.2.2     readr_2.2.0     tidyr_1.3.2     tibble_3.3.1   
+#&gt;  [9] ggplot2_4.0.4   tidyverse_2.0.0 TriGer_0.99.0  
+#&gt; 
+#&gt; loaded via a namespace (and not attached):
+#&gt;  [1] gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.2     tidyselect_1.2.1  
+#&gt;  [5] scales_1.4.0       yaml_2.3.12        fastmap_1.2.0      R6_2.6.1          
+#&gt;  [9] labeling_0.4.3     generics_0.1.4     knitr_1.52         htmlwidgets_1.6.4 
+#&gt; [13] pillar_1.11.1      RColorBrewer_1.1-3 tzdb_0.5.0         rlang_1.3.0       
+#&gt; [17] stringi_1.8.9      xfun_0.62          S7_1.0.0           otel_0.3.0        
+#&gt; [21] timechange_0.4.0   cli_3.6.6          withr_3.0.3        magrittr_2.0.5    
+#&gt; [25] digest_0.6.39      grid_4.6.2         hms_1.1.4          lifecycle_1.0.5   
+#&gt; [29] vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1         farver_2.1.2      
+#&gt; [33] rmarkdown_2.32     tools_4.6.2        pkgconfig_2.0.3    htmltools_0.5.9</code></pre>
+</div>
+</div>
+</section>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<p>The code in this tab is shown for reference and is not executed on this page. The Python package gives the same modules as the R package on the same input; indices are 0-based.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install triger</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> triger</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># x: samples x genera (CLR); y: samples x metabolites (log), as pandas DataFrames</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># with the same sample index, prepared as in the R tab.</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> triger.triger(x, y, method<span class="op">=</span><span class="st">"spearman"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                    lambda1<span class="op">=</span><span class="fl">1.5</span>, lambda2<span class="op">=</span><span class="fl">1.8</span>, lambda3<span class="op">=</span><span class="fl">1.8</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                    X_size<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">25</span>), Y_size<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">50</span>))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, mod <span class="kw">in</span> <span class="bu">enumerate</span>(res.modules, start<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(k, mod.X_names, mod.Y_names)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> res.m</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>triger.plot3in1_v1(res.R[:m, :m], res.R[m:, m:], res.R[:m, m:], res.modules,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                   line<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The lower-level functions are listed in the <a href="https://github.com/MATRIX-Research-Lab/TriGer-PyPI#functions">package README</a>.</p>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<p>The code in this tab is shown for reference and is not executed on this page. It applies the three steps to precomputed matrices <code>P</code> and <code>R</code> over the <span class="math inline">\(m + q\)</span> features.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode matlab code-with-copy"><code class="sourceCode matlab"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">addpath</span>(<span class="ss">'matlab/methods'</span>)<span class="op">;</span> <span class="va">addpath</span>(<span class="ss">'matlab/visualization'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="va">result</span> <span class="op">=</span> <span class="va">greedy_3step</span>(<span class="va">P</span><span class="op">,</span> <span class="va">R</span><span class="op">,</span> <span class="va">m</span><span class="op">,</span> <span class="va">q</span><span class="op">,</span> <span class="fl">1.5</span><span class="op">,</span> <span class="fl">1.8</span><span class="op">,</span> <span class="fl">1.8</span><span class="op">,</span> [<span class="fl">3</span> <span class="fl">25</span>]<span class="op">,</span> [<span class="fl">5</span> <span class="fl">50</span>])<span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="va">plot3in1_v1</span>(<span class="va">R</span>(<span class="fl">1</span><span class="op">:</span><span class="va">m</span><span class="op">,</span> <span class="fl">1</span><span class="op">:</span><span class="va">m</span>)<span class="op">,</span> <span class="va">R</span>(<span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">:</span><span class="kw">end</span><span class="op">,</span> <span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">:</span><span class="kw">end</span>)<span class="op">,</span> <span class="va">R</span>(<span class="fl">1</span><span class="op">:</span><span class="va">m</span><span class="op">,</span> <span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">:</span><span class="kw">end</span>)<span class="op">,</span> <span class="va">result</span><span class="op">,</span> <span class="va">true</span><span class="op">,</span> [<span class="fl">10</span> <span class="fl">50</span>])<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The functions and the real-data analyses of the paper are in the <a href="https://github.com/jy2941/TriGer">MATLAB repository</a>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data sources</h2>
+<p>Franzosa EA, Sirota-Madi A, Avila-Pacheco J, et al.&nbsp;Gut microbiome structure and metabolic activity in inflammatory bowel disease. <em>Nature Microbiology</em> 4:293–305 (2019). <a href="https://doi.org/10.1038/s41564-018-0306-4">doi:10.1038/s41564-018-0306-4</a></p>
+<p>Muller E, Algavi YM, Borenstein E. The gut microbiome-metabolome dataset collection: a curated resource for integrative meta-analysis. <em>npj Biofilms and Microbiomes</em> 8:79 (2022). <a href="https://doi.org/10.1038/s41522-022-00345-5">doi:10.1038/s41522-022-00345-5</a></p>
+</section>
+<section id="citation" class="level2">
+<h2 class="anchored" data-anchor-id="citation">Citation</h2>
+<p>Yu J, Lin H, Chen S. Structured cross-omics interaction discovery with a triple-graph model. <em>bioRxiv</em> (2026). <a href="https://doi.org/10.64898/2026.09.10.749540">doi:10.64898/2026.09.10.749540</a></p>
+</section>
+<section id="related-methods" class="level2">
+<h2 class="anchored" data-anchor-id="related-methods">Related methods</h2>
+<ul>
+<li><a href="../tools/diagmi.html">DiAGMI</a>: integration of multi-omics data (in development).</li>
+<li><a href="../tools/metvae.html">MetVAE</a>: correlation networks within a metabolomics layer.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/matrix-research-lab\.github\.io\/software\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>MATRIX Research Lab, University of Maryland School of Public Health</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://matrix-research-lab.github.io/">
+<p>Lab website</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -2,7 +2,7 @@
 title: "DiAGMI"
 description: "Integration of multi-omics data."
 area: "Multi-omics integration"
-order: 1
+order: 2
 status: in development
 platforms:
   - name: R
@@ -11,7 +11,7 @@ platforms:
     status: planned
   - name: Web tool
     status: planned
-related: []
+related: [triger]
 ---
 
 ::: {.method-meta}

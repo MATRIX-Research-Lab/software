@@ -17,7 +17,12 @@ Report a reproducible error in the repository of the corresponding package.
 | ANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM | [FrederickHuangLin/ANCOMBC](https://github.com/FrederickHuangLin/ANCOMBC/issues) |
 | scikit-bio (Python): ANCOM-BC, ANCOM-BC2 | [scikit-bio/scikit-bio](https://github.com/scikit-bio/scikit-bio/issues) |
 | q2-composition (QIIME 2) | [QIIME 2 Forum](https://forum.qiime2.org/) |
-| MetVAE (Python) | [FrederickHuangLin/MetVAE-PyPI](https://github.com/FrederickHuangLin/MetVAE-PyPI/issues) |
+| MetVAE (R) | [MATRIX-Research-Lab/MetVAE](https://github.com/MATRIX-Research-Lab/MetVAE/issues) |
+| MetVAE (Python) | [MATRIX-Research-Lab/MetVAE-PyPI](https://github.com/MATRIX-Research-Lab/MetVAE-PyPI/issues) |
+| MetVAE (GNPS) | [Some-Earth-2514/GNPS_Local](https://github.com/Some-Earth-2514/GNPS_Local/issues) |
+| TriGer (R) | [MATRIX-Research-Lab/TriGer](https://github.com/MATRIX-Research-Lab/TriGer/issues) |
+| TriGer (Python) | [MATRIX-Research-Lab/TriGer-PyPI](https://github.com/MATRIX-Research-Lab/TriGer-PyPI/issues) |
+| TriGer (MATLAB) | [jy2941/TriGer](https://github.com/jy2941/TriGer/issues) |
 
 ## Platform support sites
 
