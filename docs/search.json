@@ -137,7 +137,7 @@
     "href": "community.html#discussion-forum",
     "title": "Community",
     "section": "Discussion forum",
-    "text": "Discussion forum\nThe discussion forum for all MATRIX software is hosted on GitHub Discussions, with one category per method. A GitHub account is required to post."
+    "text": "Discussion forum\nThe discussion forum for all MATRIX software is hosted on GitHub Discussions. Post questions about the use of a method in the Q&A category, with the name of the method in the title. A GitHub account is required to post."
   },
   {
     "objectID": "community.html#bug-reports",

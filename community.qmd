@@ -6,7 +6,7 @@ title: "Community"
 
 ## Discussion forum
 
-The discussion forum for all MATRIX software is hosted on [GitHub Discussions](https://github.com/MATRIX-Research-Lab/software/discussions), with one category per method. A GitHub account is required to post.
+The discussion forum for all MATRIX software is hosted on [GitHub Discussions](https://github.com/MATRIX-Research-Lab/software/discussions). Post questions about the use of a method in the [Q&A](https://github.com/MATRIX-Research-Lab/software/discussions/categories/q-a) category, with the name of the method in the title. A GitHub account is required to post.
 
 ## Bug reports
 
