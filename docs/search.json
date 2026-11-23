@@ -95,7 +95,7 @@
     "href": "tools/triger.html#platforms",
     "title": "TriGer",
     "section": "Platforms",
-    "text": "Platforms\n\n\n\nPlatform\nPackage\nInstall\nDocumentation\n\n\n\n\nR\nTriGer\nremotes::install_github(\"MATRIX-Research-Lab/TriGer\")\nGitHub · vignette(\"TriGer\")\n\n\nPython\ntriger (PyPI)\npip install triger\nPyPI · GitHub\n\n\nMATLAB\nTriGer functions\nClone the repository; add matlab/methods and matlab/visualization to the path\nGitHub\n\n\n\nThe R package is installed from GitHub; its Bioconductor submission is under review. The R and Python packages give identical results on the same input. The MATLAB repository also contains the code for the simulations and real-data analyses of the paper."
+    "text": "Platforms\n\n\n\nPlatform\nPackage\nInstall\nDocumentation\n\n\n\n\nR\nTriGer\nremotes::install_github(\"MATRIX-Research-Lab/TriGer\")\nGitHub · vignette(\"TriGer\")\n\n\nPython\ntriger (PyPI)\npip install triger\nPyPI · GitHub\n\n\nMATLAB\nTriGer functions (Jiaao Yu)\nClone the repository; add matlab/methods and matlab/visualization to the path\nGitHub\n\n\n\nThe R package is installed from GitHub; its Bioconductor submission is under review. The R and Python packages give identical results on the same input. The MATLAB implementation is by Jiaao Yu; its repository also contains the code for the simulations and real-data analyses of the paper."
   },
   {
     "objectID": "tools/triger.html#extended-tutorial",

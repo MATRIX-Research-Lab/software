@@ -35,9 +35,9 @@ TriGer (triple-graph model) detects modules of features from two omics layers $X
 |---|---|---|---|
 | R | TriGer | `remotes::install_github("MATRIX-Research-Lab/TriGer")` | [GitHub](https://github.com/MATRIX-Research-Lab/TriGer) · `vignette("TriGer")` |
 | Python | triger (PyPI) | `pip install triger` | [PyPI](https://pypi.org/project/triger/) · [GitHub](https://github.com/MATRIX-Research-Lab/TriGer-PyPI) |
-| MATLAB | TriGer functions | Clone the repository; add `matlab/methods` and `matlab/visualization` to the path | [GitHub](https://github.com/jy2941/TriGer) |
+| MATLAB | TriGer functions (Jiaao Yu) | Clone the repository; add `matlab/methods` and `matlab/visualization` to the path | [GitHub](https://github.com/jy2941/TriGer) |
 
-The R package is installed from GitHub; its Bioconductor submission is under review. The R and Python packages give identical results on the same input. The MATLAB repository also contains the code for the simulations and real-data analyses of the paper.
+The R package is installed from GitHub; its Bioconductor submission is under review. The R and Python packages give identical results on the same input. The MATLAB implementation is by Jiaao Yu; its repository also contains the code for the simulations and real-data analyses of the paper.
 
 ## Extended tutorial
 
