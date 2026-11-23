@@ -19,7 +19,9 @@ main.content h1.title { font-size: 2.3rem; }
 .front::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .32;
   background-image: repeating-linear-gradient(4deg, rgba(50, 58, 62, .025) 0 1px, transparent 1px 5px), repeating-linear-gradient(94deg, rgba(255, 255, 255, .2) 0 1px, transparent 1px 8px); }
 .scene, .drift { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .5s; }
-@keyframes flow { to { stroke-dashoffset: var(--period); } }
+.grove { position: absolute; inset: 0; pointer-events: none; transition: opacity .5s; }
+.grove svg { position: absolute; overflow: visible; will-change: transform; }
+@keyframes flow { to { stroke-dashoffset: calc(-1 * var(--period)); } }
 .drift .flow path { animation: flow linear infinite; }
 .drift .petals { transition: opacity .6s; }
 .front-in { position: relative; z-index: 1; max-width: 1280px; margin: auto; padding: 2.4rem 20px 2rem; }
@@ -74,7 +76,7 @@ main.content h1.title { font-size: 2.3rem; }
 .splash { display: none; }
 
 @media (max-width: 899px) {
-  .scene { opacity: .32; }
+  .scene, .grove { opacity: .32; }
   .drift { display: none; }
   .caption { display: none; }
   .front-head { margin-bottom: 1.5rem; }
@@ -138,7 +140,7 @@ main.content h1.title { font-size: 2.3rem; }
   .js .cat.open { z-index: 3; }
   .js .cat.open .stone { transform: scale(1.18); }
   .js .stage.has-open .cat:not(.open) { opacity: .28; }
-  .js .front.focus .scene, .js .front.focus .drift { opacity: .3; }
+  .js .front.focus .scene, .js .front.focus .grove, .js .front.focus .drift { opacity: .3; }
   .js .front.focus .drift .petals { opacity: 0; }
   .js .stage.filtering .sat.off { opacity: .15; }
 
@@ -156,7 +158,7 @@ main.content h1.title { font-size: 2.3rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene, .drift, .drift path, .cat, .stone, .sat, .koi, .koi-tail { transition: none !important; animation: none !important; }
+  .scene, .grove, .grove svg, .drift, .drift path, .cat, .stone, .sat, .koi, .koi-tail { transition: none !important; animation: none !important; }
   .splash { display: none !important; }
 }
 

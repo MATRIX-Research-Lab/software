@@ -35,6 +35,8 @@
 
   // ---- Motion parameters -----------------------------------------------------------
   var WIND = 22, FALL = 20, FLOW = 11;   // px/s at a 1440 px wide page: wind, falling speed of petals, river current
+  var GUST_DELAY = 2.4;                  // s for a gust to cross the page from left to right
+  var BEND = [.4, 2.6];                  // bend of a tree (degrees): constant part and part proportional to the wind
   var MAX_PETALS = 9;                    // petals in the air or on the water at one time
   var IDLE_R = 16, IDLE_T = [26, 36];    // radius (px) and period range (s) of the slow loop a resting fish swims
 
@@ -45,6 +47,21 @@
   drift.setAttribute("focusable", "false");
   front.insertBefore(drift, front.querySelector(".scene").nextSibling);
   var river = null;   // river geometry and blossom positions of the current drawing, set by drawScene
+
+  // Each tree is drawn in its own pair of SVG layers inside this element, so that it can bend in
+  // the wind as a whole without redrawing its filters.
+  var grove = document.createElement("div");
+  grove.className = "grove";
+  grove.setAttribute("aria-hidden", "true");
+  front.insertBefore(grove, drift);
+  var trees = [];
+
+  // Wind strength, between about 0.1 and 1, at time t (s). The wind blows from left to right; a
+  // gust reaches the page position x after a delay proportional to x.
+  function wind(t, x) {
+    var s = t - GUST_DELAY * x / (river ? river.W : 1440);
+    return .55 + .25 * Math.sin(.21 * s) + .15 * Math.sin(.53 * s + 1.3) + .05 * Math.sin(1.7 * s + .4);
+  }
 
   function crescent(r) {
     return "M" + (-r).toFixed(1) + " 0A" + r.toFixed(1) + " " + r.toFixed(1) + " 0 0 1 " + r.toFixed(1) + " 0A" + (r * 1.02).toFixed(1) + " " + (r * .28).toFixed(1) + " 0 0 0 " + (-r).toFixed(1) + " 0Z";
@@ -157,12 +174,13 @@
     // Fog: the landscape fades behind the header, the caption, and the platform filter.
     var fog = el("mask", { id: "s-clear", maskUnits: "userSpaceOnUse", x: -M, y: -M, width: W + 2 * M, height: H + 2 * M }, defs);
     el("rect", { x: -M, y: -M, width: W + 2 * M, height: H + 2 * M, fill: "#fff" }, fog);
-    var fogG = el("g", { filter: "url(#s-fog)" }, fog), fr = front.getBoundingClientRect();
+    var fogG = el("g", { filter: "url(#s-fog)" }, fog), fr = front.getBoundingClientRect(), fogs = [];
     [[".front-head", 1], [".filter", .45]].forEach(function (f) {
       var e = front.querySelector(f[0]), b = e && e.getBoundingClientRect();
       if (!b || !b.width) return;
-      el("ellipse", { cx: b.left - fr.left + b.width / 2, cy: b.top - fr.top + b.height / 2, rx: b.width * .62 + 40 * u, ry: b.height * .7 + 30 * u,
-                      fill: "#000", opacity: P.clear * f[1] }, fogG);
+      var spec = { cx: b.left - fr.left + b.width / 2, cy: b.top - fr.top + b.height / 2, rx: b.width * .62 + 40 * u, ry: b.height * .7 + 30 * u, op: P.clear * f[1] };
+      fogs.push(spec);
+      el("ellipse", { cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry, fill: "#000", opacity: spec.op }, fogG);
     });
     var land = el("g", { mask: "url(#s-clear)" });
 
@@ -245,8 +263,11 @@
       }
     }
 
-    // Trees: tapered brush strokes for trunk and branches, blossoms at the branch ends.
-    var trunkG = el("g", { filter: "url(#s-brush)" }, land), bloomG = el("g", {}, land);
+    // Trees: tapered brush strokes for trunk and branches, blossoms at the branch ends. Each tree
+    // is a layer of branches and a layer of blossoms, both in page coordinates and cropped to the
+    // tree; the layers bend about the base of the trunk.
+    while (grove.firstChild) grove.removeChild(grove.firstChild);
+    trees = [];
     function grow(x, y, a, len, w, depth, strokes, tips) {
       var n = 9, seg = len / n, p = [[x, y]], ws = [w];
       for (var k = 1; k <= n; k++) {
@@ -271,24 +292,60 @@
       return curve(Lf.concat([p[p.length - 1]], Rt.reverse()), true);
     }
     var spots = [];
-    function tree(spec) {
+    function treeLayer(k, name, box, base) {
+      var sv = document.createElementNS(svgNS, "svg"), id = "s-t" + k + name;
+      sv.setAttribute("class", "tree-" + name);
+      sv.setAttribute("viewBox", [box[0], box[1], box[2] - box[0], box[3] - box[1]].map(function (v) { return v.toFixed(1); }).join(" "));
+      sv.style.left = box[0].toFixed(1) + "px";
+      sv.style.top = box[1].toFixed(1) + "px";
+      sv.style.width = (box[2] - box[0]).toFixed(1) + "px";
+      sv.style.height = (box[3] - box[1]).toFixed(1) + "px";
+      sv.style.transformOrigin = (base[0] - box[0]).toFixed(1) + "px " + (base[1] - box[1]).toFixed(1) + "px";
+      grove.appendChild(sv);
+      var d = el("defs", {}, sv), region = { x: box[0], y: box[1], width: box[2] - box[0], height: box[3] - box[1] };
+      // The fog of the header and the platform filter, as soft ellipses.
+      var rg = el("radialGradient", { id: id + "g" }, d);
+      el("stop", { offset: "0", "stop-color": "#000" }, rg);
+      el("stop", { offset: ".55", "stop-color": "#000", "stop-opacity": ".85" }, rg);
+      el("stop", { offset: "1", "stop-color": "#000", "stop-opacity": "0" }, rg);
+      var mk = el("mask", { id: id + "m", maskUnits: "userSpaceOnUse", x: region.x, y: region.y, width: region.width, height: region.height }, d);
+      el("rect", { x: region.x, y: region.y, width: region.width, height: region.height, fill: "#fff" }, mk);
+      fogs.forEach(function (f) {
+        el("ellipse", { cx: f.cx, cy: f.cy, rx: f.rx * 1.3, ry: f.ry * 1.3, fill: "url(#" + id + "g)", opacity: f.op }, mk);
+      });
+      var g = el("g", { mask: "url(#" + id + "m)" }, sv);
+      if (name === "branches") {
+        var fl = el("filter", Object.assign({ id: id + "f", filterUnits: "userSpaceOnUse", "color-interpolation-filters": "sRGB" }, region), d);
+        el("feTurbulence", { type: "fractalNoise", baseFrequency: (.08 / u).toFixed(4), numOctaves: 2, seed: 2, result: "n" }, fl);
+        el("feDisplacementMap", { "in": "SourceGraphic", in2: "n", scale: 4.5 * u, xChannelSelector: "R", yChannelSelector: "G" }, fl);
+        g = el("g", { filter: "url(#" + id + "f)" }, g);
+      }
+      return { svg: sv, g: g };
+    }
+    function tree(spec, k) {
       var side = spec[0] === "ul" ? 1 : -1, t = spec[1] * ax.len, size = spec[3], strokes = [], tips = [];
       var base = at(t, side * (half(t) + spec[2] * u));
       grow(base[0], base[1], -Math.PI / 2 + spec[4], 270 * size * u, 26 * size * u, 2, strokes, tips);
-      strokes.forEach(function (st) { el("path", { d: brush(st.p, st.w), fill: INK, opacity: R(.84, .95).toFixed(2) }, trunkG); });
-      for (var k = 0; k < 5; k++) {
+      var pts = [[base[0] - 50 * u, base[1] + 8 * u], [base[0] + 50 * u, base[1] + 8 * u]], pad = 44 * size * u;
+      strokes.forEach(function (st) { pts = pts.concat(st.p); });
+      var xs = pts.map(function (q) { return q[0]; }), ys = pts.map(function (q) { return q[1]; });
+      var box = [Math.min.apply(null, xs) - pad, Math.min.apply(null, ys) - pad, Math.max.apply(null, xs) + pad, Math.max.apply(null, ys) + pad];
+      var br = treeLayer(k, "branches", box, base), bl = treeLayer(k, "blossoms", box, base);
+      strokes.forEach(function (st) { el("path", { d: brush(st.p, st.w), fill: INK, opacity: R(.84, .95).toFixed(2) }, br.g); });
+      for (var j = 0; j < 5; j++) {
         el("path", { d: "M" + pt([base[0] - R(10, 40) * u, base[1] + R(-2, 6) * u]) + "h" + (R(30, 80) * u).toFixed(1), fill: "none", stroke: INK,
-                     "stroke-width": (R(1, 3) * u).toFixed(1), "stroke-linecap": "round", opacity: R(.2, .5).toFixed(2) }, trunkG);
+                     "stroke-width": (R(1, 3) * u).toFixed(1), "stroke-linecap": "round", opacity: R(.2, .5).toFixed(2) }, br.g);
       }
       tips.forEach(function (tp) {
         var n = 3 + Math.floor(rnd() * P.bloom), r = 26 * size * u;
-        spots.push(tp);
-        for (var k = 0; k < n; k++) {
+        spots.push({ x: tp[0], y: tp[1], tree: k });
+        for (var j = 0; j < n; j++) {
           var a = R(0, 6.28), d = Math.sqrt(rnd()) * r;
           el("path", { d: crescent(R(11, 22) * size * u), fill: pick(P.blossom), opacity: R(.85, .97).toFixed(2),
-                       transform: "translate(" + (tp[0] + Math.cos(a) * d).toFixed(1) + " " + (tp[1] + Math.sin(a) * d * .8).toFixed(1) + ") rotate(" + R(-60, 60).toFixed(0) + ")" }, bloomG);
+                       transform: "translate(" + (tp[0] + Math.cos(a) * d).toFixed(1) + " " + (tp[1] + Math.sin(a) * d * .8).toFixed(1) + ") rotate(" + R(-60, 60).toFixed(0) + ")" }, bl.g);
         }
       });
+      trees.push({ branches: br.svg, blossoms: bl.svg, x: base[0], y: base[1], size: size, ph: R(0, 6.3), angle: 0 });
     }
     P.trees.forEach(tree);
 
@@ -299,7 +356,7 @@
       el("path", { d: "M" + pt([tp[0] - tw, tp[1] - tw * .6]) + "L" + pt(tp) + "L" + pt([tp[0] + tw, tp[1] - tw * .8]), "stroke-width": (1.2 * u).toFixed(1), opacity: ".45" }, water);
     }
 
-    // Motion layer: dashed flow lines that move downstream (toward the lower left), and a group for petals.
+    // Motion layer: dashed flow lines that move downstream (toward the upper right), and a group for petals.
     while (drift.firstChild) drift.removeChild(drift.firstChild);
     drift.setAttribute("viewBox", "0 0 " + W + " " + H);
     drift.setAttribute("preserveAspectRatio", "none");
@@ -310,7 +367,7 @@
       for (s = sa; s <= sa + sl; s += 20 * u) fl.push(at(s, o * half(s) + 5 * u * Math.sin(s / (60 * u) + ph)));
       var dur = PERIOD / (FLOW * u * R(.8, 1.2));
       el("path", { d: line(fl), "stroke-width": (R(.7, 1.2) * u).toFixed(2), opacity: R(.12, .22).toFixed(2), "stroke-dasharray": dash.toFixed(0) + " " + (PERIOD - dash).toFixed(0),
-                   style: "--period:" + PERIOD.toFixed(0) + ";animation-duration:" + dur.toFixed(1) + "s;animation-delay:" + (-R(0, dur)).toFixed(1) + "s" }, flow);
+                   style: "--period:" + PERIOD.toFixed(0) + "px;animation-duration:" + dur.toFixed(1) + "s;animation-delay:" + (-R(0, dur)).toFixed(1) + "s" }, flow);
     }
     river = { W: W, H: H, u: u, A: ax.A, d: ax.d, n: ax.n, meander: meander, half: half, spots: spots,
               petals: el("g", { "class": "petals" }, drift) };
@@ -324,29 +381,29 @@
   }
 
   // ---- Falling petals ----------------------------------------------------------------
-  // A petal leaves a blossom, drifts down and to the right in the wind, and after a fall of a
-  // random height either floats downstream on the water or fades on the bank.
+  // A petal leaves a blossom, is carried down and to the right by the wind, and after a fall of a
+  // random height either floats downstream on the water, which also flows to the right, or fades
+  // on the bank.
   var petals = [], nextPetal = 0, clock = 0;
   function petalStep(dt) {
     if (!river || still.matches) return;
     var u = river.u;
-    clock += dt;
     if (clock >= nextPetal && petals.length < MAX_PETALS && river.spots.length) {
       nextPetal = clock + 1.2 + Math.random() * 2.4;
-      var sp = river.spots[Math.floor(Math.random() * river.spots.length)];
+      var sp = river.spots[Math.floor(Math.random() * river.spots.length)], tr = trees[sp.tree];
+      var sx = sp.x + Math.tan(tr.angle * Math.PI / 180) * (sp.y - tr.y);   // the blossom's position in the bent tree
       var e = document.createElementNS(svgNS, "path");
       e.setAttribute("d", crescent((5.5 + Math.random() * 4) * u));
       e.setAttribute("fill", P.blossom[Math.floor(Math.random() * P.blossom.length)]);
       river.petals.appendChild(e);
-      petals.push({ e: e, x: sp[0], y: sp[1], y0: sp[1], drop: (80 + Math.random() * 220) * u, rot: Math.random() * 360,
+      petals.push({ e: e, x: sx, y: sp.y, y0: sp.y, drop: (80 + Math.random() * 220) * u, rot: Math.random() * 360,
                     spin: (Math.random() - .5) * 120, ph: Math.random() * 6.3, state: 0, age: 0, op: 0 });
     }
     petals = petals.filter(function (p) {
       p.age += dt;
       var flip = 1;
       if (p.state === 0) {
-        var gust = 1 + .5 * Math.sin(clock * .35 + p.ph);
-        p.x += (WIND * gust + 14 * Math.sin(p.age * 1.3 + p.ph)) * u * dt;
+        p.x += (WIND * (.3 + 1.2 * wind(clock, p.x)) + 5 * Math.sin(p.age * 1.3 + p.ph)) * u * dt;
         p.y += FALL * u * dt;
         p.rot += p.spin * dt;
         p.op = Math.min(.92, p.op + dt * 1.5);
@@ -354,18 +411,30 @@
         if (p.y - p.y0 > p.drop) { p.state = onWater(p.x, p.y) ? 1 : 2; p.age = 0; }
       } else if (p.state === 1) {
         var wob = 4 * Math.sin(p.age * .8 + p.ph);
-        p.x += (-river.d[0] * FLOW + river.n[0] * wob) * u * dt;
-        p.y += (-river.d[1] * FLOW + river.n[1] * wob) * u * dt;
+        p.x += (river.d[0] * FLOW + river.n[0] * wob) * u * dt;
+        p.y += (river.d[1] * FLOW + river.n[1] * wob) * u * dt;
         p.rot += p.spin * .1 * dt;
         p.op = .92 * Math.max(0, 1 - p.age / 14);
       } else {
         p.op -= dt * .35;
       }
-      var gone = (p.state && p.op <= 0) || p.x > river.W + 30 || p.y > river.H + 30 || p.x < -30;
+      var gone = (p.state && p.op <= 0) || p.x > river.W + 30 || p.y > river.H + 30 || p.y < -30;
       if (gone) { p.e.remove(); return false; }
       p.e.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.y.toFixed(1) + ") rotate(" + p.rot.toFixed(0) + ") scale(1 " + (.35 + .65 * Math.abs(flip)).toFixed(2) + ")");
       p.e.setAttribute("opacity", Math.max(0, p.op).toFixed(2));
       return true;
+    });
+  }
+
+  // ---- Trees in the wind -------------------------------------------------------------
+  // A tree bends downwind about the base of its trunk (a horizontal shear that grows with height);
+  // its blossoms bend a little further and flutter.
+  function treeStep() {
+    trees.forEach(function (t) {
+      t.angle = still.matches ? 0 : -(BEND[0] + BEND[1] * wind(clock, t.x));
+      var flutter = still.matches ? 0 : .35 * Math.sin(clock * 3.1 + t.ph);
+      t.branches.style.transform = "skewX(" + t.angle.toFixed(2) + "deg)";
+      t.blossoms.style.transform = "skewX(" + (t.angle * 1.12 + flutter).toFixed(2) + "deg)";
     });
   }
 
@@ -411,7 +480,9 @@
     if (!wide.matches || document.hidden) { last = now; return; }
     var dt = Math.min(.05, (now - last) / 1000 || 0);
     last = now;
+    clock += dt;
     petalStep(dt);
+    treeStep();
     fishes.forEach(function (f) {
       var active = f.cat === openCat, speed = 0, want, idle = false;
       // A resting fish swims a slow loop around its resting place.
