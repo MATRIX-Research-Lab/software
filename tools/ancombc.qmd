@@ -33,7 +33,7 @@ ANCOM-BC (analysis of compositions of microbiomes with bias correction) tests fo
 
 | Platform | Package | Install | Documentation |
 |---|---|---|---|
-| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC.html) · [GitHub](https://github.com/FrederickHuangLin/ANCOMBC) |
+| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC.html) · [GitHub](https://github.com/MATRIX-Research-Lab/ANCOMBC) |
 | Python | scikit-bio (version 0.7.1 or later) | `pip install scikit-bio` | [`skbio.stats.composition.ancombc`](https://scikit.bio/docs/latest/generated/skbio.stats.composition.ancombc.html) |
 | QIIME 2 | q2-composition | Included in the QIIME 2 amplicon distribution | [`qiime composition ancombc`](https://amplicon-docs.qiime2.org/en/stable/references/plugins/composition.html#q2-action-composition-ancombc) · [GitHub](https://github.com/qiime2/q2-composition) |
 

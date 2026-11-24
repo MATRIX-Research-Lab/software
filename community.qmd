@@ -14,7 +14,7 @@ Report a reproducible error in the repository of the corresponding package.
 
 | Software | Issue tracker |
 |---|---|
-| ANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM | [FrederickHuangLin/ANCOMBC](https://github.com/FrederickHuangLin/ANCOMBC/issues) |
+| ANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM | [MATRIX-Research-Lab/ANCOMBC](https://github.com/MATRIX-Research-Lab/ANCOMBC/issues) |
 | scikit-bio (Python): ANCOM-BC, ANCOM-BC2 | [scikit-bio/scikit-bio](https://github.com/scikit-bio/scikit-bio/issues) |
 | q2-composition (QIIME 2) | [QIIME 2 Forum](https://forum.qiime2.org/) |
 | MetVAE (R) | [MATRIX-Research-Lab/MetVAE](https://github.com/MATRIX-Research-Lab/MetVAE/issues) |

@@ -144,7 +144,7 @@
     "href": "community.html#bug-reports",
     "title": "Community",
     "section": "Bug reports",
-    "text": "Bug reports\nReport a reproducible error in the repository of the corresponding package.\n\n\n\nSoftware\nIssue tracker\n\n\n\n\nANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM\nFrederickHuangLin/ANCOMBC\n\n\nscikit-bio (Python): ANCOM-BC, ANCOM-BC2\nscikit-bio/scikit-bio\n\n\nq2-composition (QIIME 2)\nQIIME 2 Forum\n\n\nMetVAE (R)\nMATRIX-Research-Lab/MetVAE\n\n\nMetVAE (Python)\nMATRIX-Research-Lab/MetVAE-PyPI\n\n\nMetVAE (GNPS)\nSome-Earth-2514/GNPS_Local\n\n\nTriGer (R)\nMATRIX-Research-Lab/TriGer\n\n\nTriGer (Python)\nMATRIX-Research-Lab/TriGer-PyPI\n\n\nTriGer (MATLAB)\njy2941/TriGer"
+    "text": "Bug reports\nReport a reproducible error in the repository of the corresponding package.\n\n\n\nSoftware\nIssue tracker\n\n\n\n\nANCOMBC (R): ANCOM-BC, ANCOM-BC2, SECOM\nMATRIX-Research-Lab/ANCOMBC\n\n\nscikit-bio (Python): ANCOM-BC, ANCOM-BC2\nscikit-bio/scikit-bio\n\n\nq2-composition (QIIME 2)\nQIIME 2 Forum\n\n\nMetVAE (R)\nMATRIX-Research-Lab/MetVAE\n\n\nMetVAE (Python)\nMATRIX-Research-Lab/MetVAE-PyPI\n\n\nMetVAE (GNPS)\nSome-Earth-2514/GNPS_Local\n\n\nTriGer (R)\nMATRIX-Research-Lab/TriGer\n\n\nTriGer (Python)\nMATRIX-Research-Lab/TriGer-PyPI\n\n\nTriGer (MATLAB)\njy2941/TriGer"
   },
   {
     "objectID": "community.html#platform-support-sites",

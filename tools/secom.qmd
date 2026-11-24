@@ -29,7 +29,7 @@ SECOM (sparse estimation of correlations among microbiomes) estimates correlatio
 
 | Platform | Package | Install | Documentation |
 |---|---|---|---|
-| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/SECOM.html) · [GitHub](https://github.com/FrederickHuangLin/ANCOMBC) |
+| R | ANCOMBC (Bioconductor) | `BiocManager::install("ANCOMBC")` | [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/SECOM.html) · [GitHub](https://github.com/MATRIX-Research-Lab/ANCOMBC) |
 
 ## Extended tutorial
 
